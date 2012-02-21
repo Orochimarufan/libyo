@@ -24,7 +24,7 @@ class SimpleProgress(AbstractProgressObject):
 class SimpleProgress2(SimpleProgress):
     def __init__(self):
         super(SimpleProgress2,self).__init__()
-        self.unknown=TypeVar(self,"_b_unknown",bool)
+        self.unknown=TypeVar(bool,False)
         self._r_lastpos=0
         self._r_backwards=False
     def _redraw(self):
@@ -45,11 +45,14 @@ class SimpleProgress2(SimpleProgress):
         sys.stdout.write("{0} {1} {2}%\r".format(self._r_text,prbar,perce))
     def _redraw_unknown(self):
         self._redraw_common()
-        marke=self._r_lastpos+math.ceil(self._r_space/50)
-        if marke > self._r_space:
+        if self._r_backwards:
+            marke=self._r_lastpos-math.ceil(self._r_space/50)
+        else:
+            marke=self._r_lastpos+math.ceil(self._r_space/50)
+        if marke >= self._r_space:
             self._r_backwards=True
-            marke=self._r_space
-        elif marke < 1:
+            marke=self._r_space-2
+        elif marke <= 1:
             self._r_backwards=False
             marke=1
         prbar="".join(["["," "*(marke-1),"<=>"," "*(self._r_space-marke-2),"]"])
