@@ -50,6 +50,16 @@ class Test(unittest.TestCase):
         x=resolve.resolve3(v["video"]["id"])
         print(x.title)
         print()
+    def youtube2(self):
+        from libyo.youtube.url import id_from_url
+        print("[libyo.youtube.resolve Test]")
+        vid = "http://www.youtube.com/watch?v=zUQCgTFSxBE&list=PL037FB54C523B4637&index=6&feature=plpp_video"
+        id = id_from_url(vid)
+        from libyo.youtube.resolve import resolve3
+        v= resolve3(id)
+        print (",".join([":".join((str(a),b[:5])) for a,b in v.urlmap.items()]))
+        print(v.title)
+        print(v.uploader)
     def magic(self):
         print("[libyo.magic Test]")
         import libyo.magic
@@ -82,5 +92,6 @@ if __name__ == "__main__":
     if len(sys.argv)<2:
         sys.argv.append("Test.magic")
         sys.argv.append("Test.youtube1")
+        sys.argv.append("Test.youtube2")
         sys.argv.append("Test.configparser")
     unittest.main()

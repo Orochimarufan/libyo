@@ -18,8 +18,25 @@ class Namespace(dict):
     """A dict that is accessible by attribute notation."""
     def __init__(self,*args,**kwargs):
         super(Namespace,self).__init__(*args,**kwargs);
-    def __getattr__(self,key):
-        return self.__getitem__(key);
+    def __getattribute__(self,key): 
+        #For some weird reason we can't use __getattr__ here or it won't work with Data Descriptors.
+        #AFAIK
+        #def __getattr__(self,name):
+        #    do_something
+        #SHOULD equal
+        #def __getattribute__(self,name):
+        #    try:
+        #        return super(class,self).__getattribute__(name)
+        #    except AttributeError:
+        #        do_something
+        #Or am I wrong there?
+        try:
+            return super(Namespace,self).__getattribute__(key)
+        except AttributeError:
+            try:
+                return self.__getitem__(key);
+            except KeyError:
+                raise AttributeError("<{0} object> has no Attribute '{1}'".format(self.__class__.__name__,key))
     def __setattr__(self,key,value):
         return self.__setitem__(key,value);
     def __delattr__(self,key):

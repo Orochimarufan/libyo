@@ -121,6 +121,8 @@ class AliasVar(DataDescriptor):
     def __init__(self,name):
         self.name=name
     def __get__(self,obj,objtype=None):
+        if obj is None and objtype is not None:
+            return type.__getattribute__(objtype,self.name)
         return obj.__getattribute__(self.name)
     def __set__(self,obj,value):
         return obj.__setattr__(self.name,value)
