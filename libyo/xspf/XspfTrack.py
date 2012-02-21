@@ -23,7 +23,7 @@ class XspfTrack(object):
             self.setLocation(sLocation)
         return self
     def __init__(self,elem=None):
-        super(XspfTrack,self).__init__(elem)
+        super(XspfTrack,self).__init__()
         if elem is None:
             self.xml = lxml.etree.Element("track") #@UndefinedVariable
         else:

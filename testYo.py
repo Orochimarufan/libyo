@@ -60,6 +60,11 @@ class Test(unittest.TestCase):
         print (",".join([":".join((str(a),b[:5])) for a,b in v.urlmap.items()]))
         print(v.title)
         print(v.uploader)
+        v.fmt_url_map=None
+        v.url_encoded_fmt_stream_map=None
+        v.fmt_stream_map=None
+        for i,j in sorted(v.items()):
+            print("{i}={j}".format(i=repr(i),j=repr(j)))
     def magic(self):
         print("[libyo.magic Test]")
         import libyo.magic
