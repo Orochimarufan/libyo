@@ -4,8 +4,8 @@ Created on 01.02.2012
 @author: hinata
 '''
 from __future__ import absolute_import;
-COMPAT="python2"
-TARGET="python3"
+LIBYO_COMPAT="python2"
+LIBYO_TARGET="python3"
 import urllib as _urllib;
 import urllib2 as _urllib2;
 import urlparse as _urlparse;

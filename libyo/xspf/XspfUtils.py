@@ -3,12 +3,21 @@ Created on 12.12.2011
 
 @author: hinata
 '''
-from __future__ import unicode_literals
 from .. import compat
-str = compat.getModule("util").unistr
+str = compat.getModule("util").unistr #@ReservedAssignment
 import lxml.etree
 import re
 import datetime
+
+import logging
+from ..extern.UriRegex import HAS_REGEX as HAS_URI_REGEX
+if not HAS_URI_REGEX:
+    logging.getLogger("libyo.xspf.XspfUtils").warning("Cannot use UriRegex class. Elements that must be URIs will not be checked for Validity!")
+    def _isUri(*args,**kwds):
+        return True
+else:
+    from ..extern.UriRegex import UriRegex as _UriRegex
+    _isUri = _UriRegex.getInstance().isUri
 
 class XspfUtils(object):
     REG_DATETIME=re.compile("^\-?(?P<year>[0-9]{4,5})\-(?P<month>[0-1][0-9])\-(?P<day>[0-3][0-9])T(?P<hour>[0-2][0-9])\:(?P<minute>[0-5][0-9])\:(?P<second>[0-5][0-9])(?:\.(?P<fractional>[0-9]{2,8}))?(?P<zone>(?:[\+\-][0-1][0-9]\:[0-5][0-9])|Z)?$")

@@ -15,4 +15,4 @@ class Resolver(object):
         raw=self.backend.resolve()
         if not raw:
             raise exception.YouTubeResolveError("Could not Resolve!",video_id)
-        return VideoInfo(raw,raw["fmt_url_map"])
+        return VideoInfo(raw)

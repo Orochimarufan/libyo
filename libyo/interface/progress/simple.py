@@ -6,8 +6,9 @@ Created on 01.12.2011
 import sys
 import math
 from . import AbstractProgressObject
-from ..terminal import getTerminalSize
-from ...util.util import fillP, typeVar2 as typeVar
+from ...extern.terminal import getTerminalSize
+from ...util.pretty import fillP
+from ...util.reflect import TypeVar
 
 class SimpleProgress(AbstractProgressObject):
     def _start(self):
@@ -23,7 +24,7 @@ class SimpleProgress(AbstractProgressObject):
 class SimpleProgress2(SimpleProgress):
     def __init__(self):
         super(SimpleProgress2,self).__init__()
-        self.unknown=typeVar(self,"_b_unknown",bool)
+        self.unknown=TypeVar(self,"_b_unknown",bool)
         self._r_lastpos=0
         self._r_backwards=False
     def _redraw(self):

@@ -1,29 +1,31 @@
 from abc import abstractmethod
-from ...util.util import typeTriggerVar2, typeTriggerVar, setterFunc, yoObject
+from ...util.reflect import DescriptorObject, TypeTriggerVar2, TypeTriggerVar, setterFunc
 
-class AbstractProgressObject(yoObject):
+class AbstractProgressObject(DescriptorObject):
     def __init__(self):
+        super(AbstractProgressObject,self).__init__()
         #internal
         self._active=False
         self.stopIter=False
         self._isTaskList=False
-        #Properties
-        self.min=typeTriggerVar(self,"_i_min",int,self._f_ran)
-        self.max=typeTriggerVar(self,"_i_max",int,self._f_ran,100)
-        self._range(self.min,self.max)  #typeTriggerVar, in contrary to typeTriggerVar2 does not call the trigger for the init value
-                                        #Why not use typeTriggerVar2 here, too? because _f_ran needs self.max and self.min to exist, which is not true while typeTriggerVar2 is run!
-        self.position=typeTriggerVar2(self,"_i_pos",int,self._changed)
-        self.task=typeTriggerVar2(self,"_s_task",str,self._task,"Processing...")
-        self.name=typeTriggerVar2(self,"_s_name",str,self._name,"Progress")
+        #descriptor vars
+        self.min=TypeTriggerVar(int,self._f_ran)
+        self.max=TypeTriggerVar(int,self._f_ran,100)
+        self.position=TypeTriggerVar2(int,self._changed)
+        self.task=TypeTriggerVar2(str,self._task,"Processing...")
+        self.name=TypeTriggerVar2(str,self._name,"Progress")
         #set*()
-        self.setMax=setterFunc(self,"max")
-        self.setMin=setterFunc(self,"min")
-        self.setPos=setterFunc(self,"position")
-        self.setValue=setterFunc(self,"position")
+        self.setMax=self.setMaximum=setterFunc(self,"max")
+        self.setMin=self.setMinimum=setterFunc(self,"min")
+        self.setPos=self.setPosition=\
+        self.setValue=self.setCurrent=setterFunc(self,"position")
         self.setName=setterFunc(self,"name")
         self.setTask=setterFunc(self,"task")
-    def _f_ran(self,x):
-        #typeTriggerVar only passes the changed value but _range needs min,max.
+    def setRange(self,mini,maxi):
+        self.__getdescriptor__('min').notrigger(mini);
+        self.__getdescriptor__('max').notrigger(maxi);
+        self._f_ran();
+    def _f_ran(self,x=None):
         self._range(self.min,self.max)
     def start(self):
         if not self._active:
@@ -33,8 +35,8 @@ class AbstractProgressObject(yoObject):
         if self._active:
             self._stop()
             self._active=False
-    #convinience Methods
-    def next(self,task=None):
+    #convenience Methods
+    def next(self,task=None): #@ReservedAssignment
         self.position+=1
         if self.position>self.max and self.stopIter:
             raise StopIteration()
@@ -66,6 +68,9 @@ class AbstractProgressObject(yoObject):
         self.position=0
         self.task="Processing..."
         self._isTaskList=False
+    #aliases
+    done=stop;
+    nextTask=next;
     #Methods to override
     def _changed(self,position):
         if self._active:
@@ -79,7 +84,7 @@ class AbstractProgressObject(yoObject):
     def _task(self,newtask):
         if self._active:
             self._redraw()
-    #abstractmethods
+    #abstract methods
     @abstractmethod
     def _start(self):
         raise NotImplementedError()

@@ -73,10 +73,10 @@ class PreservedOrderDict(object):
         self._list.remove(self.item(key))
     def __contains__(self,key):
         return key in self.keys()
-    #def __dict__(self):
-    #    return dict(self._list)
-    def __list__(self):
+    def dict(self):
+        return dict(self._list)
+    def list(self):
         return list(self._list)
-    def __tuple__(self):
+    def tuple(self):
         return tuple(self._list)
-    
+

@@ -4,16 +4,8 @@ Created on 12.12.2011
 @author: hinata
 '''
 import logging
-from ..extern.UriRegex import HAS_REGEX as HAS_URI_REGEX
-if not HAS_URI_REGEX:
-    logging.getLogger("libyo.xspf.XspfObject").warning("Cannot use UriRegex class. Elements that must be URIs will not be checked for Validity!")
-    def _isUri(*args,**kwds):
-        return True
-else:
-    from ..extern.UriRegex import UriRegex as _UriRegex
-    _isUri = _UriRegex.getInstance().isUri
 import lxml.etree
-from .XspfUtils import XspfUtils
+from .XspfUtils import XspfUtils,_isUri
 from .XspfTrackList import XspfTrackList
 from .XspfTrack import XspfTrack
 import datetime

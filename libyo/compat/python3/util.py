@@ -4,6 +4,9 @@ Created on 01.02.2012
 @author: hinata
 '''
 
+LIBYO_COMPAT="python3"
+LIBYO_TARGET="libyo"
+
 char = chr;
 unistr=str;
 encstr=str;

@@ -4,8 +4,7 @@ Created on 12.12.2011
 @author: hinata
 '''
 import lxml.etree
-from .XspfUtils import XspfUtils
-from .XspfObject import _isUri
+from .XspfUtils import XspfUtils,_isUri
 def _isNNI(string):
     """Non-Negative Integer"""
     try:
@@ -24,6 +23,7 @@ class XspfTrack(object):
             self.setLocation(sLocation)
         return self
     def __init__(self,elem=None):
+        super(XspfTrack,self).__init__(elem)
         if elem is None:
             self.xml = lxml.etree.Element("track") #@UndefinedVariable
         else:

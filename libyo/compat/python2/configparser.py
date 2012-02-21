@@ -119,12 +119,11 @@ ConfigParser -- responsible for parsing a list of
         `space_around_delimiters' is True (the default), delimiters
         between keys and values are surrounded by spaces.
 
-VERSION=3.2.2
-backport for python 2.x
+backport for python 2.x from python 3.2.2 trunk
 """
 
-COMPAT="python2"
-TARGET="python3"
+LIBYO_COMPAT="python2"
+LIBYO_TARGET="python3"
 
 from collections import MutableMapping, OrderedDict as _default_dict
 import functools
@@ -133,7 +132,7 @@ import itertools
 import re
 import sys
 import warnings
-from .ChainMap import ChainMap as _ChainMap
+from .ChainMap import ChainMap as _ChainMap, _recursive_repr
 
 ########################################################################
 ###  ConfigParser of Python/3.2

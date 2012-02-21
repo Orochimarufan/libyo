@@ -62,11 +62,11 @@ if PY_MAJOR_VERSION==3:
     from configparser import InterpolationError, InterpolationDepthError, InterpolationMissingOptionError, InterpolationSyntaxError
     from configparser import DEFAULTSECT, MAX_INTERPOLATION_DEPTH, _UNSET
 else:
-    from .compat.compat2_configparser import ConfigParser, RawConfigParser, SectionProxy
-    from .compat.compat2_configparser import BasicInterpolation, ExtendedInterpolation as CPEI, Interpolation
-    from .compat.compat2_configparser import Error, DuplicateOptionError, DuplicateSectionError, MissingSectionHeaderError, NoOptionError, NoSectionError, ParsingError
-    from .compat.compat2_configparser import InterpolationError, InterpolationDepthError, InterpolationMissingOptionError, InterpolationSyntaxError
-    from .compat.compat2_configparser import DEFAULTSECT, MAX_INTERPOLATION_DEPTH, _UNSET
+    from .compat.python2.configparser import ConfigParser, RawConfigParser, SectionProxy
+    from .compat.python2.configparser import BasicInterpolation, ExtendedInterpolation as CPEI, Interpolation
+    from .compat.python2.configparser import Error, DuplicateOptionError, DuplicateSectionError, MissingSectionHeaderError, NoOptionError, NoSectionError, ParsingError
+    from .compat.python2.configparser import InterpolationError, InterpolationDepthError, InterpolationMissingOptionError, InterpolationSyntaxError
+    from .compat.python2.configparser import DEFAULTSECT, MAX_INTERPOLATION_DEPTH, _UNSET
 import posixpath
 import itertools
 

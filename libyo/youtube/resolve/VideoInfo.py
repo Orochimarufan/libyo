@@ -5,37 +5,33 @@ Created on 01.02.2012
 '''
 
 from .. import exception
+from ...util.Namespace import Namespace
 
-class VideoInfo(object):
+class VideoInfo(Namespace):
     """libYO.youtube.resolve.VideoInfo
     
     Holds Informations about a resolved video.
     
     functions:
         fmt_url(fmt): returns the URL for FMTCODE fmt.
+        url(profile,quality): returns the URL for quality in profile
     
     items:
+        video_id   : Video ID
         title      : Video Title
         uploader   : Video Uploader
         description: Video Description
-        fmt_stream_map: YouTube FMT/STREAM MAP
         fmt_url_map: dict(FMT:URL)
-        *          : More
+        *          : More; depends on Backend
     """
-    def __init__(self,infomap,urlmap):
-        self.map=infomap
-        self.urlmap=urlmap
+    def __init__(self,flashvars):
+        super(VideoInfo,self).__init__(flashvars);
+        # Get rid of interfearing dict methods #this approach wont work
+#        self.__delattribute__("clear");
+#        self.__delattribute__("pop");
+#        self.__delattribute__("popitem");
+#        self.__delattribute__("setdefault");
     def fmt_url(self,fmt):
-        if int(fmt) not in self.urlmap:
-            raise exception.FMTNotAvailableError(self.video_id,fmt,self._urlmap.keys(),self.title)
-        return self.urlmap[int(fmt)]
-    def __getattr__(self,name):
-        try:
-            return super(object).__getattr__(name)
-        except AttributeError:
-            try:
-                return self.map[name]
-            except IndexError:
-                raise AttributeError()
-    def __getitem__(self,key):
-        return self.map[key]
+        if int(fmt) not in self.fmt_url_map:
+            raise exception.FMTNotAvailableError(self.video_id,fmt,self.fmt_url_map.keys(),self.title)
+        return self.fmt_url_map[int(fmt)]

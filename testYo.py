@@ -12,10 +12,11 @@ class Test(unittest.TestCase):
         print("[libyo.user.progress.qt Test]")
         from PyQt4 import QtGui
         app=QtGui.QApplication([])
-        from libyo.user.progress.qt import QtProgress
+        from libyo.interface.progress.qt import QtProgress
         import time
         print("Test 1: Basic use")
         p=QtProgress()
+        print(p)
         p.setName("QtProgress Test")
         p.setTask("Test 1: Basic use")
         p.start()
