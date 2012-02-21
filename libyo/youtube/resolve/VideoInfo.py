@@ -6,6 +6,7 @@ Created on 01.02.2012
 
 from .. import exception
 from ...util.Namespace import Namespace
+from ...util.reflect import AliasVar
 
 class VideoInfo(Namespace):
     """libYO.youtube.resolve.VideoInfo
@@ -26,11 +27,7 @@ class VideoInfo(Namespace):
     """
     def __init__(self,flashvars):
         super(VideoInfo,self).__init__(flashvars);
-        # Get rid of interfearing dict methods #this approach wont work
-#        self.__delattribute__("clear");
-#        self.__delattribute__("pop");
-#        self.__delattribute__("popitem");
-#        self.__delattribute__("setdefault");
+    urlmap = AliasVar("fmt_url_map");
     def fmt_url(self,fmt):
         if int(fmt) not in self.fmt_url_map:
             raise exception.FMTNotAvailableError(self.video_id,fmt,self.fmt_url_map.keys(),self.title)

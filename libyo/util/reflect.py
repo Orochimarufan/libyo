@@ -117,6 +117,14 @@ class TypeTriggerVar2(TypeTriggerVar):
         super(TypeTriggerVar2,self).__init__(type,trigger,value);
         self.trigger(self.value);
 
+class AliasVar(DataDescriptor):
+    def __init__(self,name):
+        self.name=name
+    def __get__(self,obj,objtype=None):
+        return obj.__getattribute__(self.name)
+    def __set__(self,obj,value):
+        return obj.__setattr__(self.name,value)
+
 #------------------------------------------------------------------------------
 # Getter and Setter Function Factories
 #------------------------------------------------------------------------------
