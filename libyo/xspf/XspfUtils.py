@@ -66,7 +66,7 @@ class XspfUtils(object):
         if not cls.hasTag(node, tag):
             return None
         else:
-            return node.find(tag).text
+            return cls.find(node,tag).text
     
     #DateTime handlers
     @staticmethod

@@ -1,3 +1,7 @@
 from ..compat import getModule as _
-for i,j in _("urllib").__dict__.items():
-    locals()[i]=j;
+_=_("urllib")
+request=_.request
+response=_.response
+error=_.error
+parse=_.parse
+robotparser=_.robotparser

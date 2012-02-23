@@ -14,11 +14,17 @@ Features:
 
 LIBYO_VERSION_MAJOR=0
 LIBYO_VERSION_MINOR=9
-LIBYO_VERSION_PATCH=6
-LIBYO_VERSION_MPATCH="e"
+LIBYO_VERSION_PATCH=7
+LIBYO_VERSION_MPATCH="a"
 LIBYO_VERSION="{LIBYO_VERSION_MAJOR}.{LIBYO_VERSION_MINOR}.{LIBYO_VERSION_PATCH}{LIBYO_VERSION_MPATCH}".format(**locals())
 
 def minVersion(major,minor=0,patch=0,mpatch=""):
     mpatch=str(mpatch).lower();
     return (LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_PATCH,LIBYO_VERSION_MPATCH)\
                >=(major,minor,patch,mpatch);
+def reqVersion(major,minor=0,patch=0,mpatch=""):
+    if not minVersion(major,minor,patch,mpatch):
+        class LibyoOutdatedException(Exception):
+            def __init__(self,major,minor,patch,mpatch):
+                super(LibyoOutdatedException,self).__init__("FATAL: This Application requires at least libyo version {0}.{1}.{2}.{3}".format(major,minor,patch,mpatch))
+        raise LibyoOutdatedException(major,minor,patch,mpatch)

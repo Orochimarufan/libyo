@@ -5,10 +5,11 @@ Created on 18.02.2012
 '''
 
 from __future__ import unicode_literals as _future_literals, absolute_import as _future_import
-from argparse import ArgumentParser, HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter, ArgumentDefaultsHelpFormatter #@UnusedImport
-from argparse import ArgumentError, ArgumentTypeError #@UnusedImport
-from argparse import Action, FileType, Namespace #@UnusedImport
-from argparse import SUPPRESS, OPTIONAL, ZERO_OR_MORE, ONE_OR_MORE, PARSER, REMAINDER #@UnusedImport
+from argparse import ArgumentParser as StockArgumentParser #@UnusedImport
+from .extern.argparse import ArgumentParser, HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter, ArgumentDefaultsHelpFormatter #@UnusedImport
+from .extern.argparse import ArgumentError, ArgumentTypeError #@UnusedImport
+from .extern.argparse import Action, FileType, Namespace #@UnusedImport
+from .extern.argparse import SUPPRESS, OPTIONAL, ZERO_OR_MORE, ONE_OR_MORE, PARSER, REMAINDER #@UnusedImport
 import sys as _sys
 
 class ArgumentParserExit(Exception):
@@ -17,7 +18,7 @@ class ArgumentParserExit(Exception):
         self.status=status;
 
 class LibyoArgumentParser(ArgumentParser):
-    """Extended Version of the Standard Library (2.7+) ArgumentParser
+    """Extended Version of ArgumentParser v1.2
         to improve the coder's control over Output and exiting policies.
 
     Keyword Arguments:
@@ -88,10 +89,10 @@ class LibyoArgumentParser(ArgumentParser):
             'argument to ArgumentParser is no longer supported.',
             DeprecationWarning);
         self._print_message(self.format_version(), fp);
-    def _print_message(self,message,file=None): #@ReservedAssignment
-        if file is None:
-            file = self.output_handle; #@ReservedAssignment
-        file.write(message);
+    def _print_message(self,message,fp=None):
+        if fp is None:
+            fp = self.output_handle;
+        fp.write(message);
     
     # ===============
     # Exiting methods

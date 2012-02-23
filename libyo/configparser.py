@@ -103,6 +103,10 @@ class RawPcsxConfigParser(RawConfigParser): #needed for configs having values ou
     NOSECT="__DEFAULT__" # Where to put items without a section?
     NOSECT_COMMENT="#[NO SECTION]; The following data is not provided without section information!"
     #NOSECT_COMMENT=None
+    def setnosect(self,key,value):
+        if not self.NOSECT in self.sections():
+            self.add_section(self.NOSECT)
+        return self.set(self.NOSECT,key,value)
     def getnosect(self,key,fallback=_UNSET):
         return self.get(self.NOSECT,key,fallback=fallback)
     def _read(self, fp, fpname):

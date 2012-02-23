@@ -30,7 +30,11 @@ class WebBackend(AbstractBackend):
         r.add_header("Referer","http://www.youtube.com")
         self.hook = urllib.request.urlopen(r)
     def _resolve(self):
-        self._fetch()
+        try:
+            self._fetch()
+        except (urllib.error.URLError, urllib.error.HTTPError) as e:
+            logger.warn("Connection Error: "+str(e));
+            return False
         if "lxml" in globals():
             return self._lxml()
         else:
@@ -38,6 +42,8 @@ class WebBackend(AbstractBackend):
     @staticmethod
     def fvars_parser(fvars):
         main=sdict_parser(fvars,unq=0)
+        if "url_encoded_fmt_stream_map" not in main:
+            return False
         map6=[sdict_parser(i,unq=2) for i in urllib.parse.unquote(main["url_encoded_fmt_stream_map"]).split(",")]
         main=sdict_parser(fvars)
         main["fmt_stream_map"]=map6
