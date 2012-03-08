@@ -11,20 +11,17 @@ Features:
     libyo.configparser - StdPy configparser extension
     libyo.type - PreservedOrderDict: a dict-like type that preserves the order items were added
 """
-
 LIBYO_VERSION_MAJOR=0
 LIBYO_VERSION_MINOR=9
-LIBYO_VERSION_PATCH=7
-LIBYO_VERSION_MPATCH="a"
-LIBYO_VERSION="{LIBYO_VERSION_MAJOR}.{LIBYO_VERSION_MINOR}.{LIBYO_VERSION_PATCH}{LIBYO_VERSION_MPATCH}".format(**locals())
+LIBYO_VERSION_MICRO=8
+LIBYO_VERSION_PATCH=""
+__VERSION__=(LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_MICRO,LIBYO_VERSION_PATCH);
+LIBYO_VERSION="{0}.{1}.{2}{3}".format(*__VERSION__)
 
-def minVersion(major,minor=0,patch=0,mpatch=""):
-    mpatch=str(mpatch).lower();
-    return (LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_PATCH,LIBYO_VERSION_MPATCH)\
-               >=(major,minor,patch,mpatch);
-def reqVersion(major,minor=0,patch=0,mpatch=""):
-    if not minVersion(major,minor,patch,mpatch):
-        class LibyoOutdatedException(Exception):
-            def __init__(self,major,minor,patch,mpatch):
-                super(LibyoOutdatedException,self).__init__("FATAL: This Application requires at least libyo version {0}.{1}.{2}.{3}".format(major,minor,patch,mpatch))
-        raise LibyoOutdatedException(major,minor,patch,mpatch)
+#moved comparison to version module
+from .version import Version as _VersionClass
+
+minVersion              = _VersionClass._libyo_version().minVersion
+reqVersion              = _VersionClass._libyo_version().requireVersion
+fancyReqVersion         = _VersionClass._libyo_version().fancyRequireVersion
+LibyoOutdatedException  = _VersionClass.OutdatedError

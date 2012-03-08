@@ -14,5 +14,5 @@ class Resolver(object):
         self.backend.setup(video_id)
         raw=self.backend.resolve()
         if not raw:
-            raise exception.YouTubeResolveError("Could not Resolve!",video_id)
+            raise exception.YouTubeResolveError(None,video_id)
         return VideoInfo(raw)

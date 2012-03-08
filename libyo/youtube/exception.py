@@ -13,6 +13,8 @@ class YouTubeResolveError(YouTubeException):
     def __init__(self,msg,video_id,video_title=None):
         self.video_id=video_id
         self.video_title=(video_title if video_title is not None else "")
+        if msg is None:
+            msg = "could not resolve video: "+video_id;
         super(YouTubeException,self).__init__(msg)
 
 class FMTNotAvailableError(YouTubeResolveError):
