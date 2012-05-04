@@ -1,10 +1,12 @@
-'''
-Created on 07.03.2012
+"""
+@author Orochimarufan
+@module libyo.version
+@created 2012-03-07
+@modified 2012-05-04
+"""
 
-@author: hinata
-'''
+from __future__ import absolute_import, unicode_literals, division
 
-from __future__ import print_function
 from . import __VERSION__ as LIBYO_VERSION_TUPLE
 from . import LIBYO_VERSION, LIBYO_VERSION_MAJOR, LIBYO_VERSION_MINOR, LIBYO_VERSION_MICRO, LIBYO_VERSION_PATCH #@UnusedImports
 from sys import version_info as PY_VERSION_INFO

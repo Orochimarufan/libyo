@@ -11,6 +11,9 @@ Features:
     libyo.configparser - StdPy configparser extension
     libyo.type - PreservedOrderDict: a dict-like type that preserves the order items were added
 """
+
+from __future__ import absolute_import, unicode_literals, division
+
 LIBYO_VERSION_MAJOR=0
 LIBYO_VERSION_MINOR=9
 LIBYO_VERSION_MICRO=8

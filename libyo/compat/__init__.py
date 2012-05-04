@@ -6,10 +6,8 @@ Created on 28.11.2011
 import sys
 import importlib
 
-if sys.version_info[0]<3:
-    COMPAT="python2"
-else:
-    COMPAT="python3"
+PY3 = sys.version_info[0]<3
+COMPAT = "python3" if PY3 else "python2"
 
 MODULE = importlib.import_module("libyo.compat."+COMPAT)
 

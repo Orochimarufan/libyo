@@ -4,6 +4,8 @@ Created on 01.02.2012
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals, division
+
 from .. import exception
 from ...util.Namespace import Namespace
 from ...util.reflect import AliasVar

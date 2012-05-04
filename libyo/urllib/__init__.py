@@ -1,7 +1,8 @@
 from ..compat import getModule as _
-_=_("urllib")
-request=_.request
-response=_.response
-error=_.error
-parse=_.parse
-robotparser=_.robotparser
+request=_("urllib.request") #TODO: redo this!
+response=_("urllib.response")
+error=_("urllib.error")
+parse=_("urllib.parse")
+robotparser=_("urllib.robotparser")
+
+__all__ = ["download","handlers","request","response","error","parse","robotparser"]

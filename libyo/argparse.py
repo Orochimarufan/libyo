@@ -1,10 +1,12 @@
-'''
-Created on 18.02.2012
-
-@author: hinata
-'''
+"""
+@author Orochimarufan
+@module libyo.
+@created 2012-02-18
+@modified 2012-05-04
+"""
 
 from __future__ import unicode_literals as _future_literals, absolute_import as _future_import
+
 from argparse import ArgumentParser as StockArgumentParser #@UnusedImport
 from .extern.argparse import ArgumentParser, HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter, ArgumentDefaultsHelpFormatter #@UnusedImport
 from .extern.argparse import ArgumentError, ArgumentTypeError #@UnusedImport

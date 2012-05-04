@@ -3,10 +3,12 @@ Created on 01.12.2011
 
 @author: hinata
 '''
-from ...type import PreservedOrderDict
-pod = PreservedOrderDict
 
-profiles = PreservedOrderDict((
+from __future__ import absolute_import, unicode_literals, division
+
+from collections import OrderedDict as pod
+
+profiles = pod((
             ("mixed-avc",(pod([(1080,37),(720,22),(719,45),(480,44),(360,18),(359,43),(240,5)]),"Use best (prefer MPEG4/AVC)")),
             ("mixed",(pod([(1080,37),(720,45),(480,44),(360,43),(240,5)]),"Use best (prefer WebM)")),
             ("webm",(pod([(720,45),(480,44),(360,43)]),"Use WebM only.")),
@@ -20,7 +22,7 @@ profiles = PreservedOrderDict((
             ("mixed-3d",(pod([(720,102),(719,45),(480,101),(479,44),(360,100),(359,18),(240,83),(239,5)]),"Try to use 3D (perfer WebM)")),
             ("mixed-3d-avc",(pod([(720,84),(719,22),(480,101),(479,44),(360,82),(359,18),(240,83),(239,5)]),"Try to use 3D (prefer MPEG4/AVC"))
            ))
-descriptions = PreservedOrderDict((
+descriptions = pod((
             #Flash/FLV    [Sorenson Spark|MP3]
             (5,  "240p Flash/FLV (400x240)"),
             (6,  "240p Flash/FLV (480x270)"),

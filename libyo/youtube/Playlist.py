@@ -4,6 +4,8 @@ Created on 23.02.2012
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals, division
+
 from .gdata import gdata,html_decode;
 import logging;
 try:
@@ -121,5 +123,3 @@ class Playlist(object):
         def mixed(self):
             self.logger.warn("LXML not avaiable. Playlist.mixed can only provide api data. Get LXML from http://lxml.de/")
             return self.advanced()
-
-del HAS_LXML;

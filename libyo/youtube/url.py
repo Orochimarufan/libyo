@@ -4,6 +4,8 @@ Created on 02.02.2012
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals, division
+
 import re;
 from ..util.util import sdict_parser;
 

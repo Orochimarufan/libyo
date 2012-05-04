@@ -4,6 +4,8 @@ Created on 29.11.2011
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals, division
+
 import json
 from .. import compat
 import re

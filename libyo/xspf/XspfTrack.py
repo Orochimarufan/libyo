@@ -1,8 +1,12 @@
-'''
-Created on 12.12.2011
+"""
+@author Orochimarufan
+@module libyo.xspf.XspfTrack
+@created 2011-12-12
+@modified 2012-05-04
+"""
 
-@author: hinata
-'''
+from __future__ import absolute_import, unicode_literals, division
+
 import lxml.etree
 from .XspfUtils import XspfUtils,_isUri
 def _isNNI(string):

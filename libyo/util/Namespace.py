@@ -1,8 +1,11 @@
-'''
-Created on 18.02.2012
+"""
+@author Orochimarufan
+@module libyo.util.Namespace
+@created 2012-02-18
+@modified 2012-05-04
+"""
 
-@author: hinata
-'''
+from __future__ import absolute_import, unicode_literals, division
 
 try:
     _sorted = sorted

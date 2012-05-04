@@ -4,6 +4,8 @@ Created on 01.02.2012
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals, division
+
 from ...util.util import sdict_parser,unicode_unescape
 from ..exception import BackendFailedException
 import logging

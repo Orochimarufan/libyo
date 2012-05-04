@@ -53,9 +53,11 @@ SpecialConfigParser Provides Interpolation Features for RawSpecialConfigParser
 UConfigParser Provides a simple filesystem-like structure in INI-Files.
 UInterpolation Provides a simple filesystem-like Interpolation Notation (${section/option})"""
 
+from __future__ import absolute_import, unicode_literals, division
+
 import sys
-PY_MAJOR_VERSION=sys.version_info[0]
-if PY_MAJOR_VERSION==3:
+from .compat import PY3
+if PY3:
     from configparser import ConfigParser, RawConfigParser, SectionProxy
     from configparser import BasicInterpolation, ExtendedInterpolation as CPEI, Interpolation
     from configparser import Error, DuplicateOptionError, DuplicateSectionError, MissingSectionHeaderError, NoOptionError, NoSectionError, ParsingError

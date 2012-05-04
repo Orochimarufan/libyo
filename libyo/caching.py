@@ -1,8 +1,11 @@
-'''
-Created on 28.11.2011
+"""
+@author Orochimarufan
+@module libyo.caching
+@created 2011-11-28
+@modified 2012-05-04
+"""
 
-@author: hinata
-'''
+from __future__ import absolute_import, unicode_literals, division
 
 import datetime
 import time

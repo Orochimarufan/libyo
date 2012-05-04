@@ -4,6 +4,8 @@ Created on 28.11.2011
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals, division
+
 from ..base import LibYoException
 
 class YouTubeException(LibYoException):

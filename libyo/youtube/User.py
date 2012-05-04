@@ -4,6 +4,8 @@ Created on 23.02.2012
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals, division
+
 from .gdata import gdata
 import logging
 
