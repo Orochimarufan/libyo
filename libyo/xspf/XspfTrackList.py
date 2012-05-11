@@ -7,13 +7,13 @@
 
 from __future__ import absolute_import, unicode_literals, division
 
-import lxml.etree 
+from ..compat import etree
 
 class XspfTrackList(list):
     def toXml(self):
-        xml = lxml.etree.Element("trackList") #@UndefinedVariable
+        xml = etree.Element("trackList") #@UndefinedVariable
         for track in self:
             xml.append(track.toXml())
         return xml
     def toString(self):
-        return lxml.etree.tostring(self.toXml(),pretty_print=True) #@UndefinedVariable
+        return etree.tostring(self.toXml(),pretty_print=True) #@UndefinedVariable

@@ -16,7 +16,7 @@ from __future__ import absolute_import, unicode_literals, division
 
 LIBYO_VERSION_MAJOR=0
 LIBYO_VERSION_MINOR=9
-LIBYO_VERSION_MICRO=8
+LIBYO_VERSION_MICRO=9
 LIBYO_VERSION_PATCH=""
 __VERSION__=(LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_MICRO,LIBYO_VERSION_PATCH);
 LIBYO_VERSION="{0}.{1}.{2}{3}".format(*__VERSION__)
@@ -24,7 +24,7 @@ LIBYO_VERSION="{0}.{1}.{2}{3}".format(*__VERSION__)
 #moved comparison to version module
 from .version import Version as _VersionClass
 
-minVersion              = _VersionClass._libyo_version().minVersion
-reqVersion              = _VersionClass._libyo_version().requireVersion
-fancyReqVersion         = _VersionClass._libyo_version().fancyRequireVersion
+minVersion              = _VersionClass.LibyoVersion.minVersion
+reqVersion              = _VersionClass.LibyoVersion.requireVersion
+fancyReqVersion         = _VersionClass.LibyoVersion.fancyRequireVersion
 LibyoOutdatedException  = _VersionClass.OutdatedError

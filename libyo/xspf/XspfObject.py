@@ -8,7 +8,7 @@
 from __future__ import absolute_import, unicode_literals, division
 
 import logging
-import lxml.etree
+from ..compat import etree as ElementTree
 from .XspfUtils import XspfUtils,_isUri
 from .XspfTrackList import XspfTrackList
 from .XspfTrack import XspfTrack
@@ -29,7 +29,7 @@ class XspfObject(object):
     @classmethod
     def fromFile(klass,fp):
         fp = File(fp);
-        re=klass.fromETree(lxml.etree.parse(fp.fp)); #@UndefinedVariable
+        re=klass.fromETree(ElementTree.parse(fp.fp)); #@UndefinedVariable
         fp.done();
         return re;
     @classmethod
@@ -46,10 +46,10 @@ class XspfObject(object):
         return self
     def __init__(self,etree=None,trackList=None):
         if etree is None:
-            self.xml   = lxml.etree.Element("playlist",version="1",nsmap={None:self.xmlns}) #@UndefinedVariable
-        elif etree.__class__ is lxml.etree._Element: #@UndefinedVariable
+            self.xml   = ElementTree.Element("playlist",version="1",nsmap={None:self.xmlns}) #@UndefinedVariable
+        elif etree.__class__ is ElementTree._Element: #@UndefinedVariable
             self.xml    = etree
-        elif etree.__class__ is lxml.etree._ElementTree: #@UndefinedVariable
+        elif etree.__class__ is ElementTree._ElementTree: #@UndefinedVariable
             self.xml    = etree.getroot()
         self.setTitle=XspfUtils.setOrCreateElementTextHook2(self.xml, "title")
         self.getTitle=XspfUtils.getElementTextHook(self.xml, "title")
@@ -106,13 +106,13 @@ class XspfObject(object):
         return XspfTrack.new(sTitle,sCreator,sLocation)
     
     def toString(self,pretty_print=True,xml_declaration=False,encoding="utf8"):
-        return lxml.etree.tostring(self.toXml(),xml_declaration=xml_declaration,encoding=encoding,pretty_print=pretty_print) #@UndefinedVariable
+        return ElementTree.tostring(self.toXml(),xml_declaration=xml_declaration,encoding=encoding,pretty_print=pretty_print) #@UndefinedVariable
     def toXml(self):
         xml = copy(self.xml)
         xml.append(self.trackList.toXml())
         return xml
     def toETree(self):
-        return lxml.etree.ElementTree(self.toXml()) #@UndefinedVariable
+        return ElementTree.ElementTree(self.toXml()) #@UndefinedVariable
     def toFile(self, fp, encoding="utf8", method="xml", pretty_print=True, xml_declaration=True):
         fp = File(fp,"wb");
         self.toETree().write(fp.fp,encoding,method,pretty_print,xml_declaration);

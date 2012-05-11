@@ -9,6 +9,7 @@ from __future__ import absolute_import, unicode_literals, division
 
 from . import __VERSION__ as LIBYO_VERSION_TUPLE
 from . import LIBYO_VERSION, LIBYO_VERSION_MAJOR, LIBYO_VERSION_MINOR, LIBYO_VERSION_MICRO, LIBYO_VERSION_PATCH #@UnusedImports
+from .reflect.property import classproperty
 from sys import version_info as PY_VERSION_INFO
 PY_VERSION_MAJOR=PY_VERSION_INFO[0]
 PY_VERSION_MINOR=PY_VERSION_INFO[1]
@@ -39,13 +40,13 @@ class Version(object):
     def __init__(self,componentName,major,minor=0,micro=0,patch=""):
         self.version=self.versionTuple(major, minor, micro, patch);
         self.name=componentName;
-    @classmethod
-    def _libyo_version(cls):
+    @classproperty
+    def LibyoVersion(cls):
         if not hasattr(cls,"__libyo_instance__"):
             cls.__libyo_instance__=cls("libyo",LIBYO_VERSION_TUPLE);
         return cls.__libyo_instance__;
-    @classmethod
-    def _python_version(cls):
+    @classproperty
+    def PythonVersion(cls):
         if not hasattr(cls,"__python_instance__"):
             cls.__python_instance__=cls("python",PY_VERSION_TUPLE);
         return cls.__python_instance__;
@@ -77,4 +78,7 @@ class Version(object):
             tupl=self.versionTuple(major, minor, micro, patch);
             print(Version.OutdatedError.format_message(self.name, tupl, self.version));
             raise SystemExit(128);
-
+    def __str__(self):
+        return "<Component '{0}' Version {1}>".format(self.name,self._format_self_ver())
+    def __repr__(self):
+        return "{0}.{1}({2},{3},{4},{5},{6})".format(self.__class__.__module__,self.__class__.__name__,self.name,*self.version)

@@ -4,6 +4,12 @@ Created on 21.02.2012
 @author: hinata
 '''
 
+from __future__ import absolute_import, unicode_literals
+import inspect
+import sys
+import abc
+from ..compat.reflect import im_func,func_code
+
 ##############################################################################
 # libyo.util.reflect
 ##############################################################################
@@ -49,12 +55,38 @@ class WeakMethod(object):
 # Base Object to allow Instance Descriptors
 #------------------------------------------------------------------------------
 
-class DescriptorObject(object):
-    def __getdescriptor__(self,name): #THIS ONLY WORKS ON INSTANCE DESCRIPTORS!
-        value = super(DescriptorObject,self).__getattribute__(name);
-        if not hasattr(value,'__get__'):
-            raise AttributeError("%s is no valid Descriptor!"%name);
-        return value;
+class _DescriptorType(type):
+    def __rawget__(self,name):
+        return object.__getattribute__(self,name)
+    def __rawset__(self,name,value):
+        return type.__setattr__(self,name,value)
+    def __setattr__(self,name,value):
+        if hasattr(self,"__slots__"):
+            if name not in self.__slots__:
+                raise AttributeError("{0} has no Member {1}".format(self,name))
+        v = object.__getattribute__(self,name)
+        if hasattr(v,"__set__"):
+            return v.__set__(self,value)
+        return type.__setattr__(self,name,value)
+
+class DescriptorObject(object,metaclass=_DescriptorType):
+    def __rawget__(self,name):
+        try: #self
+            if hasattr(self,"__slots__"):
+                if name not in self.__slots__:
+                    raise AttributeError("{0} has no Member {1}".format(self,name))
+            return self.__dict__[name]
+        except KeyError: #bases
+            e = sys.exc_info()[2]
+            try:
+                return type(self).__rawget__(type(self),name)
+            except AttributeError:
+                raise e
+    def __rawset__(self,name,value):
+        if hasattr(self,"__slots__"):
+            if name not in self.__slots__:
+                raise AttributeError("{0} has no Member {1}".format(self,name))
+        self.__dict__[name]=value
     def __getattribute__(self,name):
         value = super(DescriptorObject,self).__getattribute__(name);
         if hasattr(value,'__get__'):
@@ -135,10 +167,10 @@ class AliasVar(DataDescriptor):
 
 def setterFunc(instance,varname):
     def setter(self,new):
-        self.__setattr__(varname,new)
+        setattr(self,varname,value)
     return setter.__get__(instance)
 
 def getterFunc(instance,varname):
     def getter(self):
-        self.__getattr__(varname)
+        getattr(self,varname)
     return getter.__get__(instance)

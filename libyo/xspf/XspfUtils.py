@@ -8,8 +8,8 @@
 from __future__ import absolute_import, unicode_literals, division
 
 from .. import compat
+from ..compat import etree as ElementTree
 str = compat.getModule("util").unistr #@ReservedAssignment
-import lxml.etree
 import re
 import datetime
 
@@ -45,7 +45,7 @@ class XspfUtils(object):
     def appendTextElement(cls,node,tag,text):
         if text is None:
             return
-        element     = lxml.etree.Element(cls.makeTagName(tag)) #@UndefinedVariable
+        element     = ElementTree.Element(cls.makeTagName(tag)) #@UndefinedVariable
         element.text= str(text)
         node.append(element)
         return element

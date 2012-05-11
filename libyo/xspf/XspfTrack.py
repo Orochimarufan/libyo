@@ -7,7 +7,8 @@
 
 from __future__ import absolute_import, unicode_literals, division
 
-import lxml.etree
+from ..compat import etree as ElementTree
+
 from .XspfUtils import XspfUtils,_isUri
 def _isNNI(string):
     """Non-Negative Integer"""
@@ -29,7 +30,7 @@ class XspfTrack(object):
     def __init__(self,elem=None):
         super(XspfTrack,self).__init__()
         if elem is None:
-            self.xml = lxml.etree.Element("track") #@UndefinedVariable
+            self.xml = ElementTree.Element("track") #@UndefinedVariable
         else:
             self.xml = elem
         #get/set Functions
@@ -59,4 +60,4 @@ class XspfTrack(object):
     def toXml(self):
         return self.xml
     def toString(self):
-        return lxml.etree.tostring(self.xml,pretty_print=True) #@UndefinedVariable
+        return ElementTree.tostring(self.xml,pretty_print=True) #@UndefinedVariable
