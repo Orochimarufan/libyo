@@ -42,11 +42,17 @@ class Version(object):
         self.name=componentName;
     @classproperty
     def LibyoVersion(cls):
+        return cls._libyo_version()
+    @classmethod
+    def _libyo_version(cls):
         if not hasattr(cls,"__libyo_instance__"):
             cls.__libyo_instance__=cls("libyo",LIBYO_VERSION_TUPLE);
         return cls.__libyo_instance__;
     @classproperty
     def PythonVersion(cls):
+        return cls._python_version()
+    @classmethod
+    def _python_version(cls):
         if not hasattr(cls,"__python_instance__"):
             cls.__python_instance__=cls("python",PY_VERSION_TUPLE);
         return cls.__python_instance__;
@@ -55,8 +61,11 @@ class Version(object):
     @staticmethod
     def _format_version(version_tuple):
         return "{0}.{1}.{2}{3}".format(*version_tuple)
+    @classmethod
     def formatVersion(self,major,minor=0,micro=0,patch=""):
         return self._format_version(self.versionTuple(major, minor, micro, patch));
+    def format(self):
+        return self._format_self_ver()
     def versionTuple(self,major,minor=0,micro=0,patch=""):
         patch=str(patch).lower();
         if isinstance(major,tuple):

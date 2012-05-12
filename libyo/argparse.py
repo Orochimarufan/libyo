@@ -7,7 +7,10 @@
 
 from __future__ import unicode_literals as _future_literals, absolute_import as _future_import
 
-from argparse import ArgumentParser as StockArgumentParser #@UnusedImport
+try: #Python 2.7+, Python 3.2+
+    from argparse import ArgumentParser as StockArgumentParser #@UnusedImport
+except ImportError: pass
+
 from .extern.argparse import ArgumentParser, HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter, ArgumentDefaultsHelpFormatter #@UnusedImport
 from .extern.argparse import ArgumentError, ArgumentTypeError #@UnusedImport
 from .extern.argparse import Action, FileType, Namespace #@UnusedImport

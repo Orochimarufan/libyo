@@ -8,7 +8,7 @@ from __future__ import absolute_import, unicode_literals
 import inspect
 import sys
 import abc
-from ..compat.reflect import im_func,func_code
+from ..compat.bltin import withmetaclass
 
 ##############################################################################
 # libyo.util.reflect
@@ -69,7 +69,8 @@ class _DescriptorType(type):
             return v.__set__(self,value)
         return type.__setattr__(self,name,value)
 
-class DescriptorObject(object,metaclass=_DescriptorType):
+@withmetaclass(_DescriptorType)
+class DescriptorObject(object):
     def __rawget__(self,name):
         try: #self
             if hasattr(self,"__slots__"):

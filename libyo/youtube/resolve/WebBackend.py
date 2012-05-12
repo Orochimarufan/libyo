@@ -10,13 +10,15 @@ from ...util.util import sdict_parser,unicode_unescape
 from ..exception import BackendFailedException
 import logging
 logger  = logging.getLogger("libyo.youtube.resolve.WebBackend")
-import libyo.compat
-urllib  = libyo.compat.getModule("urllib");
+import libyo.urllib as urllib
 
 try:
-    import lxml.html
+    from ...compat import htmlparser
 except ImportError:
-    logger.warn("LXML not found. Please Install it from http://lxml.de for full functionality")
+    logger.warn("No HtmlParser Avaiable! WebBackend will not work!")
+else:
+    if htmlparser.IMPL!="lxml":
+        logger.warn("LXML not avaiable. Please Install it from http://lxml.de for full functionality and performance!")
 from .AbstractBackend import AbstractBackend
 
 class WebBackend(AbstractBackend):
@@ -37,7 +39,7 @@ class WebBackend(AbstractBackend):
         except (urllib.error.URLError, urllib.error.HTTPError) as e:
             logger.warn("Connection Error: "+str(e));
             return False
-        if "lxml" in globals():
+        if "htmlparser" in globals():
             return self._lxml()
         else:
             return self._re()
@@ -53,7 +55,7 @@ class WebBackend(AbstractBackend):
         return main
     #RE Part
     def _re(self):
-        raise NotImplementedError()
+        raise BackendFailedException()
     #LXML part
     def _lxml_data(self):
         try:
@@ -62,7 +64,7 @@ class WebBackend(AbstractBackend):
             ibgn = scr.index(" = \"")+4;
             iend = scr.index("\\n\";\n");
             strn = unicode_unescape(scr[ibgn:iend].strip());
-            doc  = lxml.html.fragment_fromstring(strn);
+            doc  = htmlparser.fragment_fromstring(strn);
             fvars= doc.get("flashvars")
         except KeyError:
             raise BackendFailedException()
@@ -74,7 +76,7 @@ class WebBackend(AbstractBackend):
         ext["uploader"]= self.document.find_class("author")[0].text
         return ext
     def _lxml(self):
-        self.lxml = lxml.html.parse(self.hook)
+        self.lxml = htmlparser.parse(self.hook)
         self.document = self.lxml.getroot()
         self.hook.close()
         data=self._lxml_data()

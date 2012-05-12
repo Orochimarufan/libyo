@@ -29,6 +29,11 @@
     <Compile Include="libyo\argparse.py" />
     <Compile Include="libyo\base.py" />
     <Compile Include="libyo\caching.py" />
+    <Compile Include="libyo\compat\bltin.py" />
+    <Compile Include="libyo\compat\etree.py" />
+    <Compile Include="libyo\compat\features\htmlparser_fallback.py" />
+    <Compile Include="libyo\compat\features\__init__.py" />
+    <Compile Include="libyo\compat\htmlparser.py" />
     <Compile Include="libyo\compat\python2\ChainMap.py" />
     <Compile Include="libyo\compat\python2\configparser.py" />
     <Compile Include="libyo\compat\python2\html.py" />
@@ -44,10 +49,10 @@
     <Compile Include="libyo\compat\python3\__init__.py" />
     <Compile Include="libyo\compat\reflect.py" />
     <Compile Include="libyo\compat\uni.py" />
-    <Compile Include="libyo\compat\etree\__init__.py" />
     <Compile Include="libyo\compat\__init__.py" />
     <Compile Include="libyo\configparser.py" />
     <Compile Include="libyo\extern\argparse.py" />
+    <Compile Include="libyo\extern\ElementC14N.py" />
     <Compile Include="libyo\extern\terminal.py" />
     <Compile Include="libyo\extern\UriRegex.py" />
     <Compile Include="libyo\extern\__init__.py" />
@@ -101,7 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="libyo\" />
-    <Folder Include="libyo\compat\etree" />
+    <Folder Include="libyo\compat\features\" />
     <Folder Include="libyo\compat\python2\urllib\" />
     <Folder Include="libyo\compat\python3\" />
     <Folder Include="libyo\compat\python2\" />

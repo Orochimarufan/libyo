@@ -13,11 +13,16 @@ Features:
 """
 
 from __future__ import absolute_import, unicode_literals, division
+import logging
+
+DEBUG = True
+if DEBUG:
+    logging.basicConfig(level=logging.DEBUG)
 
 LIBYO_VERSION_MAJOR=0
 LIBYO_VERSION_MINOR=9
 LIBYO_VERSION_MICRO=9
-LIBYO_VERSION_PATCH=""
+LIBYO_VERSION_PATCH="x"
 __VERSION__=(LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_MICRO,LIBYO_VERSION_PATCH);
 LIBYO_VERSION="{0}.{1}.{2}{3}".format(*__VERSION__)
 
@@ -28,3 +33,5 @@ minVersion              = _VersionClass.LibyoVersion.minVersion
 reqVersion              = _VersionClass.LibyoVersion.requireVersion
 fancyReqVersion         = _VersionClass.LibyoVersion.fancyRequireVersion
 LibyoOutdatedException  = _VersionClass.OutdatedError
+
+logging.getLogger("libyo").info("Running LibYo Version {0}".format(_VersionClass.LibyoVersion.format()))
