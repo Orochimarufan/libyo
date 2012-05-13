@@ -59,4 +59,4 @@ if __name__=="__main__":
     from ..interface.progress.simple import SimpleProgress2
     p=SimpleProgress2()
     import sys
-    download(sys.argv[0],sys.argv[1],p)
+    download(sys.argv[1],sys.argv[2],p)

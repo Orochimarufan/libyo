@@ -43,9 +43,9 @@ class Test(unittest.TestCase):
     def youtube1(self):
         print("[libyo.youtube Test]")
         pl="98113EFC99B5878C"
-        from libyo.youtube import playlist,resolve
+        from libyo.youtube import Playlist,resolve
         from random import choice
-        p=playlist.advanced(pl)
+        p=Playlist.Playlist(pl).advanced()
         v=choice(p["data"]["items"])
         x=resolve.resolve3(v["video"]["id"])
         print(x.title)

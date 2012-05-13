@@ -11,6 +11,8 @@ from . import __VERSION__ as LIBYO_VERSION_TUPLE
 from . import LIBYO_VERSION, LIBYO_VERSION_MAJOR, LIBYO_VERSION_MINOR, LIBYO_VERSION_MICRO, LIBYO_VERSION_PATCH #@UnusedImports
 from .reflect.property import classproperty
 from sys import version_info as PY_VERSION_INFO
+import platform
+PY_VERSION_IMPL=platform.python_implementation()
 PY_VERSION_MAJOR=PY_VERSION_INFO[0]
 PY_VERSION_MINOR=PY_VERSION_INFO[1]
 PY_VERSION_MICRO=PY_VERSION_INFO[2]
@@ -54,7 +56,7 @@ class Version(object):
     @classmethod
     def _python_version(cls):
         if not hasattr(cls,"__python_instance__"):
-            cls.__python_instance__=cls("python",PY_VERSION_TUPLE);
+            cls.__python_instance__=cls(PY_VERSION_IMPL,PY_VERSION_TUPLE);
         return cls.__python_instance__;
     def _format_self_ver(self):
         return self._format_version(self.version);
@@ -66,6 +68,8 @@ class Version(object):
         return self._format_version(self.versionTuple(major, minor, micro, patch));
     def format(self):
         return self._format_self_ver()
+    def formatString(self):
+        return "{0} {1}".format(self.name,self.format())
     def versionTuple(self,major,minor=0,micro=0,patch=""):
         patch=str(patch).lower();
         if isinstance(major,tuple):

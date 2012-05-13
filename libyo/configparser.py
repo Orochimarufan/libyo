@@ -72,6 +72,8 @@ else:
 import posixpath
 import itertools
 
+from .compat.uni import isstring,nativestring
+
 #+ ide fix to prevent unused imports warnings
 __fix=( 
         Interpolation, BasicInterpolation,
@@ -103,7 +105,7 @@ class RawPcsxConfigParser(RawConfigParser): #needed for configs having values ou
     RawPcsxConfigParser.NOSECT specifies where to put items not having any section defined
     RawPcsxConfigParser.NOSECT_COMMENT specifies wether or not (None) to put a comment before non-sectioned data and what"""
     NOSECT="__DEFAULT__" # Where to put items without a section?
-    NOSECT_COMMENT="#[NO SECTION]; The following data is not provided without section information!"
+    NOSECT_COMMENT="#[NO SECTION]; The following data is not provided with section information!"
     #NOSECT_COMMENT=None
     def setnosect(self,key,value):
         if not self.NOSECT in self.sections():
@@ -538,13 +540,13 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
         
         SpecialConfigParser also allows Lists of Strings
         """
-        if not isinstance(section, str):
+        if not isstring(section):
             raise TypeError("section names must be strings")
-        if not isinstance(option, str):
+        if not isstring(option):
             raise TypeError("option keys must be strings")
         if not self._allow_no_value or value:
             try:
-                [isinstance(i,str) for i in value].index(False)
+                [isstring(i) for i in value].index(False)
             except:
                 pass
             else:

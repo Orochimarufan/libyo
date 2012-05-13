@@ -568,9 +568,10 @@ class RawConfigParser(MutableMapping):
     # Regular expressions for parsing section headers and options
     _SECT_TMPL = r"""
         \[                                 # [
-        (?P<header>[^]]+)                  # very permissive!
+        (?P<header>[^\]]+)                 # very permissive!
         \]                                 # ]
         """
+    _SECT_TMPL_X = r"\[(?P<header>[^\]]+)\]"
     _OPT_TMPL = r"""
         (?P<option>.*?)                    # very permissive!
         \s*(?P<vi>{delim})\s*              # any number of space/tab,
@@ -579,6 +580,7 @@ class RawConfigParser(MutableMapping):
                                            # followed by any space/tab
         (?P<value>.*)$                     # everything up to eol
         """
+    _OPT_TMPL_X = r"(?P<option>.*?)\s*(?P<vi>{delim})\s*(?P<value>.*)$"
     _OPT_NV_TMPL = r"""
         (?P<option>.*?)                    # very permissive!
         \s*(?:                             # any number of space/tab,
@@ -588,15 +590,19 @@ class RawConfigParser(MutableMapping):
                                            # space/tab
         (?P<value>.*))?$                   # everything up to eol
         """
+    _OPT_NV_TMPL_X = r"(?P<option>.*?)\s*(?:(?P<vi>{delim})\s*(?P<value>.*))?$"
     # Interpolation algorithm to be used if the user does not specify another
     _DEFAULT_INTERPOLATION = Interpolation()
     # Compiled regular expression for matching sections
-    SECTCRE = re.compile(_SECT_TMPL, re.VERBOSE)
+    #SECTCRE = re.compile(_SECT_TMPL, re.VERBOSE)
+    SECTCRE = re.compile(_SECT_TMPL_X)
     # Compiled regular expression for matching options with typical separators
-    OPTCRE = re.compile(_OPT_TMPL.format(delim="=|:"), re.VERBOSE)
+    #OPTCRE = re.compile(_OPT_TMPL.format(delim="=|:"), re.VERBOSE)
+    OPTCRE = re.compile(_OPT_TMPL_X.format(delim="=|:"))
     # Compiled regular expression for matching options with optional values
     # delimited using typical separators
-    OPTCRE_NV = re.compile(_OPT_NV_TMPL.format(delim="=|:"), re.VERBOSE)
+    #OPTCRE_NV = re.compile(_OPT_NV_TMPL.format(delim="=|:"), re.VERBOSE)
+    OPTCRE_NV = re.compile(_OPT_NV_TMPL_X.format(delim="=|:"))
     # Compiled regular expression for matching leading whitespace in a line
     NONSPACECRE = re.compile(r"\S")
     # Possible boolean values in the configuration.

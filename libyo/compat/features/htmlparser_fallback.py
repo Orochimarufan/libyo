@@ -102,7 +102,11 @@ class ParserStack(deque):
 class Parser(htmlparser.HTMLParser):
     def __init__(self,*a,**b):
         self.stack = ParserStack()
-        super(Parser,self).__init__(*a,**b)
+        self.rawddata=""
+        if PY3:
+            super(Parser,self).__init__(*a,**b)
+        else:
+            htmlparser.HTMLParser.__init__(self,*a,**b)
     def handle_starttag(self,name,attrs):
         self.stack.open(name,attrs)
     def handle_endtag(self,name):

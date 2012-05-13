@@ -31,6 +31,16 @@ if PY3: # Python 3.x
     string_unescape=unicode_unescape;
     string_escape=unicode_escape;
 
+    def isstring(s):
+        return isinstance(s,str)
+    def isgenericstring(s):
+        return isinstance(s,str) or isinstance(s,bytes)
+
+    def nativestring(s):
+        if isinstance(s,bytes):
+            return str(s,"UTF-8")
+        else:
+            return s
 
 else: # Python 2.x
     string_type = basestring
@@ -55,6 +65,16 @@ else: # Python 2.x
         return string.decode("string_escape");
     def string_escape(string):
         return string.encode("string_escape");
+
+    def isstring(s):
+        return isinstance(s,str) or isinstance(s,unicode)
+    isgenericstring = isstring
+
+    def nativestring(s):
+        if isinstance(s,unicode):
+            return str(s)
+        else:
+            return s
 
 b.__doc__="""Bytes Literal"""
 u.__doc__="""Unicode Literal"""
