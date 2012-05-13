@@ -7,22 +7,29 @@ Features:
     libyo.caching - defines a Type that features Expiring items
     libyo.magic - use Linux magic to determine filetypes.
     libyo.youtube.resolve - resolve YouTube Videos
-    libyo.youtube.playlist - retreive YouTube playlists
+    libyo.youtube.Playlist - retreive YouTube playlists
     libyo.configparser - StdPy configparser extension
-    libyo.type - PreservedOrderDict: a dict-like type that preserves the order items were added
+    libyo.xspf - Stuff for handling xspf playlists - not complete
+    libyo.argparse - StdPy ArgumentParser extension
+    libyo.version - Version Handling code
+    libyo.interface - user interface code
+    libyo.extern - code written by other people
+    libyo.compat - compatibility code
+    libyo.reflect - reflection code
+    libyo.urllib - urllib(2) extensions
 """
 
 from __future__ import absolute_import, unicode_literals, division
 import logging
 
-DEBUG = True
+DEBUG = False#True
 if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 
 LIBYO_VERSION_MAJOR=0
 LIBYO_VERSION_MINOR=9
-LIBYO_VERSION_MICRO=9
-LIBYO_VERSION_PATCH="y"
+LIBYO_VERSION_MICRO=10
+LIBYO_VERSION_PATCH=""
 __VERSION__=(LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_MICRO,LIBYO_VERSION_PATCH);
 LIBYO_VERSION="{0}.{1}.{2}{3}".format(*__VERSION__)
 

@@ -52,7 +52,6 @@
     <Compile Include="libyo\compat\__init__.py" />
     <Compile Include="libyo\configparser.py" />
     <Compile Include="libyo\extern\argparse.py" />
-    <Compile Include="libyo\extern\ElementC14N.py" />
     <Compile Include="libyo\extern\terminal.py" />
     <Compile Include="libyo\extern\UriRegex.py" />
     <Compile Include="libyo\extern\__init__.py" />
@@ -81,6 +80,7 @@
     <Compile Include="libyo\util\util.py" />
     <Compile Include="libyo\util\__init__.py" />
     <Compile Include="libyo\version.py" />
+    <Compile Include="libyo\xspf\simple.py" />
     <Compile Include="libyo\xspf\XspfObject.py" />
     <Compile Include="libyo\xspf\XspfTrack.py" />
     <Compile Include="libyo\xspf\XspfTrackList.py" />

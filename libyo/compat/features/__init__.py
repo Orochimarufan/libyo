@@ -11,13 +11,12 @@ from .. import PY3
 
 import inspect
 import logging
-logger = logging.getLogger("libyo.compat.features")
 
-def CompatibilityFeature(name,IMPLS):
+def CompatibilityFeature(name,IMPLS,module="libyo.compat.features"):
     import importlib as _import;
     for n,p in IMPLS:
         try:
-            MODULE = _import.import_module(p,"libyo.compat.features");
+            MODULE = _import.import_module(p,module);
         except ImportError:
             continue;
         else:
@@ -39,4 +38,4 @@ def CompatibilityFeature(name,IMPLS):
     del _iter
     del _set
 
-    logger.info("{0} Implementation: {1}".format(name,IMPL))
+    logging.getLogger(module).info("{0} Implementation: {1}".format(name,IMPL))
