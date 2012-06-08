@@ -66,7 +66,7 @@ class WebBackend(AbstractBackend):
             strn = unicode_unescape(scr[ibgn:iend].strip());
             doc  = htmlparser.fragment_fromstring(strn);
             fvars= doc.get("flashvars")
-        except KeyError:
+        except (IndexError,KeyError):
             raise BackendFailedException()
         return self.fvars_parser(fvars)
     def _lxml_meta(self):

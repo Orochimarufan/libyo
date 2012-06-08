@@ -1085,6 +1085,8 @@ class _SubParsersAction(Action):
         if kwargs.get('prog') is None:
             kwargs['prog'] = '%s %s' % (self._prog_prefix, name)
 
+        aliases = kwargs.pop("aliases",())
+
         # create a pseudo-action to hold the choice help
         if 'help' in kwargs:
             help = kwargs.pop('help')
@@ -1094,6 +1096,13 @@ class _SubParsersAction(Action):
         # create the parser and add it to the map
         parser = self._parser_class(**kwargs)
         self._name_parser_map[name] = parser
+
+#-- aliases backport from python 3.2 version
+        # make parser available under aliases also
+        for alias in aliases:
+            self._name_parser_map[alias] = parser
+#--
+
         return parser
 
     def _get_subactions(self):
