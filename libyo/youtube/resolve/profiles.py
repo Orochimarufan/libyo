@@ -22,10 +22,11 @@ profiles = pod((
             ("mixed-3d",(pod([(720,102),(719,45),(480,101),(479,44),(360,100),(359,18),(240,83),(239,5)]),"Try to use 3D (perfer WebM)")),
             ("mixed-3d-avc",(pod([(720,84),(719,22),(480,101),(479,44),(360,82),(359,18),(240,83),(239,5)]),"Try to use 3D (prefer MPEG4/AVC"))
            ))
+
 descriptions = pod((
             #Flash/FLV    [Sorenson Spark|MP3]
-            (5,  "240p Flash/FLV (400x240)"),
-            (6,  "240p Flash/FLV (480x270)"),
+            (5,  "240p Flash/FLV"),
+            (6,  "270p Flash/FLV"),
             #Flash/FLV    [Sorenson Spark|AAC]
             (34, "360p Flash/FLV"),
             (35, "480p Flash/FLV"),
@@ -33,6 +34,7 @@ descriptions = pod((
             (43, "360p WebM/VP8"),
             (44, "480p WebM/VP8"),
             (45, "720p WebM/VP8"),
+            #(46, "1080p WebM/VP8"), #XXX: DUP?
             #MPEG4/AVC    [H.264|AAC]
             (18, "360p MPEG4/AVC"),
             (22, "720p MPEG4/AVC"),
@@ -48,7 +50,7 @@ descriptions = pod((
             #WebM/VP8 3D  [VP8|Vorbis]
             (100,"360p WebM/VP8 3D"),
             (101,"480p WebM/VP8 3D"),
-            (46, "540p WebM/VP8 3D"),
+            (46, "540p WebM/VP8 3D"), #XXX: DUP?
             (102,"720p WebM/VP8 3D")
            ))
 file_extensions  = { #incomplete

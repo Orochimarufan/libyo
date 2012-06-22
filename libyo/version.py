@@ -10,8 +10,22 @@ from __future__ import absolute_import, unicode_literals, division
 from . import __VERSION__ as LIBYO_VERSION_TUPLE
 from . import LIBYO_VERSION, LIBYO_VERSION_MAJOR, LIBYO_VERSION_MINOR, LIBYO_VERSION_MICRO, LIBYO_VERSION_PATCH #@UnusedImports
 from .reflect.property import classproperty
-from sys import version_info as PY_VERSION_INFO
+from sys import version_info as PY_VERSION_INFO,hexversion as _py_hexver
 import platform
+import string
+if _py_hexver<0x3000000:
+    letters = string.lowercase
+else:
+    letters = string.ascii_lowercase
+def ordtonum(s):
+    n = 0
+    for i in s:
+        if i in string.digits:
+            n+=int(i)
+        elif i in letters:
+            n+=letters.index(i)
+    return n
+
 PY_VERSION_IMPL=platform.python_implementation()
 PY_VERSION_MAJOR=PY_VERSION_INFO[0]
 PY_VERSION_MINOR=PY_VERSION_INFO[1]
@@ -58,18 +72,19 @@ class Version(object):
         if not hasattr(cls,"__python_instance__"):
             cls.__python_instance__=cls(PY_VERSION_IMPL,PY_VERSION_TUPLE);
         return cls.__python_instance__;
-    def _format_self_ver(self):
-        return self._format_version(self.version);
+    DEF_FORMAT="{0}.{1}.{2}{3}"
     @staticmethod
-    def _format_version(version_tuple):
-        return "{0}.{1}.{2}{3}".format(*version_tuple)
+    def _format_version(version_tuple,format=DEF_FORMAT):
+        return format.format(*version_tuple,
+                major=version_tuple[0],minor=version_tuple[1],micro=version_tuple[2],patch=version_tuple[3],
+                patch_i = ordtonum(version_tuple[3]) )
     @classmethod
     def formatVersion(self,major,minor=0,micro=0,patch=""):
         return self._format_version(self.versionTuple(major, minor, micro, patch));
-    def format(self):
-        return self._format_self_ver()
-    def formatString(self):
-        return "{0} {1}".format(self.name,self.format())
+    def format(self,format=DEF_FORMAT):
+        return self._format_version(self.version,format)
+    def formatString(self,format=DEF_FORMAT):
+        return "{0} {1}".format(self.name,self.format(format))
     def versionTuple(self,major,minor=0,micro=0,patch=""):
         patch=str(patch).lower();
         if isinstance(major,tuple):
@@ -92,6 +107,6 @@ class Version(object):
             print(Version.OutdatedError.format_message(self.name, tupl, self.version));
             raise SystemExit(128);
     def __str__(self):
-        return "<Component '{0}' Version {1}>".format(self.name,self._format_self_ver())
+        return "<Component '{0}' Version {1}>".format(self.name,self._format_version(self.version))
     def __repr__(self):
         return "{0}.{1}({2},{3},{4},{5},{6})".format(self.__class__.__module__,self.__class__.__name__,self.name,*self.version)
