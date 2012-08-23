@@ -28,10 +28,9 @@ if DEBUG:
 
 LIBYO_VERSION_MAJOR=0
 LIBYO_VERSION_MINOR=9
-LIBYO_VERSION_MICRO=10
-LIBYO_VERSION_PATCH="b"
-__VERSION__=(LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_MICRO,LIBYO_VERSION_PATCH);
-LIBYO_VERSION="{0}.{1}.{2}{3}".format(*__VERSION__)
+LIBYO_VERSION_PATCH=11
+__VERSION__=(LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_PATCH);
+LIBYO_VERSION="{0}.{1}.{2}".format(*__VERSION__)
 
 #moved comparison to version module
 from .version import Version as _VersionClass
@@ -42,3 +41,4 @@ fancyReqVersion         = _VersionClass.LibyoVersion.fancyRequireVersion
 LibyoOutdatedException  = _VersionClass.OutdatedError
 
 logging.getLogger("libyo").info("Running LibYo Version {0}".format(_VersionClass.LibyoVersion.format()))
+

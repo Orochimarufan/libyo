@@ -38,8 +38,8 @@ class VideoResolution(object):
             if self.progressive == other.progressive or \
                 self.vga == other.vga or \
                 self.w == other.w and self.h == other.h:
-                return true
-            return false
+                return True
+            return False
         return NotImplemented
 
 resolutions = {

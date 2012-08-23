@@ -56,7 +56,9 @@ def download(url,filename,progress=None,mine=True,bytesize=32*1024):
             return downloadProgress(remote,local,progress,mine,bytesize)
 
 if __name__=="__main__":
-    from ..interface.progress.simple import SimpleProgress2
-    p=SimpleProgress2()
+    #from ..interface.progress.simple import SimpleProgress2
+    #p=SimpleProgress2()
+    from ..interface.progress.file import SimpleFileProgress
+    p = SimpleFileProgress()
     import sys
     download(sys.argv[1],sys.argv[2],p)

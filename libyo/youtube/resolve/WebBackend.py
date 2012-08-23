@@ -17,7 +17,7 @@ try:
 except ImportError:
     logger.warn("No HtmlParser Avaiable! WebBackend will not work!")
 else:
-    if htmlparser.IMPL!="lxml":
+    if htmlparser.IMPL!="lxml": #@UndefinedVariable
         logger.warn("LXML not avaiable. Please Install it from http://lxml.de for full functionality and performance!")
 from .AbstractBackend import AbstractBackend
 

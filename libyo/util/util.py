@@ -40,7 +40,7 @@ def sdict_parser(string,kvdelim="=",delim="&",unq=1):
         unq: UrlUnquote values: 0=No 2=Yes 3=Plus"""
     return dict([getkv(i,kvdelim,unq) for i in string.split(delim)])
 
-def mega(iIn,bStrOut=False,bBase10=False):
+def mega(iIn,bStrOut=False,bBase10=False,sStrStr=" ",):
     if bBase10:
         base=1000;
     else:
@@ -54,5 +54,5 @@ def mega(iIn,bStrOut=False,bBase10=False):
         i=i/base;
         if x==len(table[base]):
             break;
-    return ("{} {}".format(round(i,2),table[base][x]) if bStrOut else (i,table[base][x]))
+    return ("{0:.2f}{1}{2}".format(round(i,2),sStrStr,table[base][x]) if bStrOut else (i,table[base][x]))
 

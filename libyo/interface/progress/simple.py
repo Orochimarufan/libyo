@@ -57,4 +57,5 @@ class SimpleProgress2(SimpleProgress):
             marke=1
         prbar="".join(["["," "*(marke-1),"<=>"," "*(self._r_space-marke-2),"]"])
         self._r_lastpos=marke
-        sys.stdout.write("{0} {1}".format(self._r_text,prbar))
+        sys.stdout.write("{0} {1}\r".format(self._r_text,prbar))
+
