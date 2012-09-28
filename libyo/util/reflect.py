@@ -166,12 +166,12 @@ class AliasVar(DataDescriptor):
 # Use this in your Constructor to quickly add setters and getters
 #------------------------------------------------------------------------------
 
-def setterFunc(instance,varname):
-    def setter(self,new):
-        setattr(self,varname,value)
+def setterFunc(instance, varname):
+    def setter(self, new):
+        setattr(self, varname, new)
     return setter.__get__(instance)
 
-def getterFunc(instance,varname):
+def getterFunc(instance, varname):
     def getter(self):
-        getattr(self,varname)
+        getattr(self, varname)
     return getter.__get__(instance)

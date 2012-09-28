@@ -8,14 +8,14 @@
 from __future__ import absolute_import, unicode_literals, division
 
 from . import PY3
-from ..version import Version
+import sys
 
 if PY3:
     import builtins
 else:
     import __builtin__ as builtins
 
-if Version.PythonVersion.minVersion(2,6):
+if sys.version_info >= (2,6):
     next = builtins.next
 else:
     def next(iterator,default=None):

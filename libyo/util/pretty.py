@@ -4,6 +4,8 @@ Created on 02.02.2012
 @author: hinata
 '''
 
+from __future__ import unicode_literals, print_function
+
 def fillP(string,length,filler=" "):
     string=str(string)
     return "".join([filler*(length-len(string)),string])
