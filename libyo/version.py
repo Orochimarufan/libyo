@@ -7,58 +7,17 @@
 
 from __future__ import absolute_import, unicode_literals, division
 
-from . import __VERSION__ as LIBYO_VERSION_TUPLE
-from . import LIBYO_VERSION, LIBYO_VERSION_MAJOR, LIBYO_VERSION_MINOR, LIBYO_VERSION_MICRO, LIBYO_VERSION_PATCH #@UnusedImports
+from . import LIBYO_VERSION
 from .reflect.property import classproperty
-from sys import version_info as PY_VERSION_INFO,hexversion as _py_hexver
+from sys import version_info as PY_VERSION_INFO
 import platform
-import string
-if _py_hexver<0x3000000:
-    letters = string.lowercase
-    ints = int, long
-    strings = str, unicode
-else:
-    letters = string.ascii_lowercase
-    ints = int
-    strings = str
-def ordtonum(s):
-    """ Try to convert a string to a number by the character's ordinal relative to A """
-    if isinstance(s,int): return s
-    n = 0
-    for i in s:
-        if i in string.digits:
-            n+=int(i)
-        elif i in letters:
-            n+=letters.index(i)
-    return n
-def cmp(a,b):
-    if a==b: return 0
-    if a<b: return -1
-    if a>b: return 1
-def compare_patch(p1,p2):
-    if isinstance(p1,ints):
-        if isinstance(p2,ints):
-            return cmp(p1,p2)
-        else:
-            if p1>len(letters):
-                return 1
-            else:
-                return cmp(letters[p1],p2)
-    else:
-        if isinstance(p2,ints):
-            if p2>len(letters):
-                return -1
-            else:
-                return cmp(p1,letters[p2])
-        else:
-            return cmp(p1,p2)
+import warnings
+warnings.warn("libyo.version is DEPRECATED!", DeprecationWarning)
 
 PY_VERSION_IMPL=platform.python_implementation()
 PY_VERSION_MAJOR=PY_VERSION_INFO[0]
 PY_VERSION_MINOR=PY_VERSION_INFO[1]
-PY_VERSION_MICRO=PY_VERSION_INFO[2]
-PY_VERSION_PATCH=""
-PY_VERSION_TUPLE=tuple(PY_VERSION_INFO[:3])+("",)
+PY_VERSION_PATCH=PY_VERSION_INFO[2]
 PY_VERSION_LEVEL=PY_VERSION_INFO[3]
 
 class Version(object):
@@ -67,23 +26,23 @@ class Version(object):
         FORMAT_MESSAGE="'{0}' is outdated:\r\n\xA0\xA0\xA0\xA0This Application requires {0} v{1} (You are currently running v{2})\r\n\xA0\xA0\xA0\xA0Please upgrade {0} to version {1} or newer."
 
         def __init__(self,componentName,reqVersionTuple,insVersionTuple):
-            self.component_name=componentName;
-            self.required_version=reqVersionTuple;
-            self.required_version_string=Version._format_version(reqVersionTuple);
-            self.installed_version=insVersionTuple;
-            self.installed_version_string=Version._format_version(insVersionTuple);
+            self.component_name=componentName
+            self.required_version=reqVersionTuple
+            self.required_version_string=Version._format_version(reqVersionTuple)
+            self.installed_version=insVersionTuple
+            self.installed_version_string=Version._format_version(insVersionTuple)
             super(Version.OutdatedError,self).__init__(self.FORMAT_MESSAGE.format(
                                                             self.component_name,self.required_version_string,
-                                                            self.installed_version_string));
+                                                            self.installed_version_string))
         @classmethod
         def format_message(cls,componentName,reqVersionTuple,insVersionTuple):
             return cls.FORMAT_FORMESG.format(cls.FORMAT_MESSAGE.format(
                                                 componentName,Version._format_version(reqVersionTuple),
                                                 Version._format_version(insVersionTuple)),
-                                             cls.__module__);
+                                             cls.__module__)
 
     def __init__(self,componentName,major,minor=0,micro=0,patch=""):
-        self.version=self.versionTuple(major, minor, micro, patch);
+        self.version=self.versionTuple(major, minor, micro, patch)
         if isinstance(self.version[3],int):
             self.DEF_FORMAT = "{0}.{1}.{2}.{3}"
         else:
@@ -97,8 +56,8 @@ class Version(object):
     @classmethod
     def _libyo_version(cls):
         if not hasattr(cls,"__libyo_instance__"):
-            cls.__libyo_instance__=cls("libyo",LIBYO_VERSION_TUPLE);
-        return cls.__libyo_instance__;
+            cls.__libyo_instance__=cls("libyo", LIBYO_VERSION+("",))
+        return cls.__libyo_instance__
 
     @classproperty
     def PythonVersion(cls):
@@ -107,14 +66,13 @@ class Version(object):
     @classmethod
     def _python_version(cls):
         if not hasattr(cls,"__python_instance__"):
-            cls.__python_instance__=cls(PY_VERSION_IMPL,PY_VERSION_TUPLE);
-        return cls.__python_instance__;
+            cls.__python_instance__ = cls(PY_VERSION_IMPL, PY_VERSION_INFO+("",))
+        return cls.__python_instance__
 
     @staticmethod
     def _format_version(version_tuple,format):
         return format.format(*version_tuple,
-                major=version_tuple[0],minor=version_tuple[1],micro=version_tuple[2],patch=version_tuple[3],
-                patch_i = ordtonum(version_tuple[3]) )
+                major=version_tuple[0], minor=version_tuple[1], micro=version_tuple[2], patch=version_tuple[3])
 
     @classmethod
     def formatVersion(self,major,minor=0,micro=0,patch=""):

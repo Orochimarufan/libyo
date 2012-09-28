@@ -10,20 +10,43 @@ from .WebBackend import WebBackend
 from .EmbedBackend import EmbedBackend
 from .MixBackend import MixBackend
 from .CacheBackend import CacheBackend
+from .YoutubeDLBackend import YoutubeDLBackend
 
 from .Resolver import Resolver
 
-backends = [WebBackend,EmbedBackend,CacheBackend,MixBackend]
+backends = [
+            WebBackend,
+            EmbedBackend,
+            CacheBackend,
+            MixBackend,
+            YoutubeDLBackend,
+            ]
+
 
 def set_default_resolver(resolver):
     global DEFAULT_RESOLVER
-    DEFAULT_RESOLVER=resolver
-DEFAULT_RESOLVER=Resolver(CacheBackend(MixBackend(WebBackend(),EmbedBackend())))
+    DEFAULT_RESOLVER = resolver
 
-def resolve(vid,fmt):
+if False: #cached
+    DEFAULT_RESOLVER = Resolver(CacheBackend(MixBackend(
+                                                        WebBackend(),
+                                                        EmbedBackend(),
+                                                        YoutubeDLBackend,
+                                                        )
+                                             ))
+else: #uncached
+    DEFAULT_RESOLVER = Resolver(MixBackend(
+                                           WebBackend(),
+                                           EmbedBackend(),
+                                           YoutubeDLBackend(),
+                                           ))
+
+
+def resolve(vid, fmt):
     return DEFAULT_RESOLVER.resolve(vid).fmt_url(fmt)
 
-def resolve2(vid,quality=None,mode="url"):
+
+def resolve2(vid, quality=None, mode="url"):
     """ZO YouTube Resolver V2 (Compatible)
     
     returnValue value = resolve2(YouTubeVideoID, YouTubeFMTCode=None, mode="url")
@@ -47,37 +70,41 @@ def resolve2(vid,quality=None,mode="url"):
     The Parser is called resolve2_extract().
     
     Resolve V2 returns values based on the MODE Parameter."""
-    if mode.lower()=="url" and quality is None:
+    if mode.lower() == "url" and quality is None:
         raise ValueError("Mode 'URL' Requires Parameter 'YouTubeQualityCode' to be set!")
-    elif mode.lower()=="url":
-        quality=int(quality)
+    elif mode.lower() == "url":
+        quality = int(quality)
     vid = str(vid)
-    videoValue=DEFAULT_RESOLVER.resolve(vid)
+    videoValue = DEFAULT_RESOLVER.resolve(vid)
     if mode.lower() == "all":
-        return {"use":videoValue.map,"embed":None,"web":None}
-    elif mode.lower() in ("map","map2"):
+        return {"use": videoValue.map,
+                "embed": None,
+                "web": None}
+    elif mode.lower() in ("map", "map2"):
         return videoValue.map
-    elif mode.lower()=="url":
+    elif mode.lower() == "url":
         return videoValue.fmt_url(quality)
-    elif mode.lower()=="map6":
+    elif mode.lower() == "map6":
         return videoValue.map["fmt_stream_map"]
-    elif mode.lower()=="qa_list":
+    elif mode.lower() == "qa_list":
         return videoValue.map["fmt_url_map"].keys()
-    elif mode.lower()=="qa_map":
+    elif mode.lower() == "qa_map":
         return videoValue.map["fmt_url_map"]
     else:
-        raise TypeError("Parameter '{}' not in [ENUM mode].\nlook up the possibilities in th docs!")
+        raise TypeError("""Parameter '{}' not in [ENUM mode].
+        look up the possibilities in the docs!""")
 
-def resolve3(video_id,resolver=None):
+
+def resolve3(video_id, resolver=None):
     """YO YouTube Video Resolver (V3)
-    resolve3(video_id,resolver=None)
+    resolve3(video_id, resolver=None)
     
     Parameters:
         [ string ] video_id: The YouTube VideoID
         [Resolver] resolver: The libYO.youtube.resolve. Resolver instance to use. leave blank for default.
     
-    returns a libYO.youtube.resolve.VideoInfo instance."""
+    returns a libyo.youtube.resolve.VideoInfo instance."""
     if resolver is None:
-        resolver=DEFAULT_RESOLVER
+        resolver = DEFAULT_RESOLVER
     return resolver.resolve(video_id)
-    
+

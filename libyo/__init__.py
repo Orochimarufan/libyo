@@ -20,25 +20,18 @@ Features:
 """
 
 from __future__ import absolute_import, unicode_literals, division
+
+__VERSION__ = "0.9.12"
+
+import sys
+if __debug__:
+    if "logging" not in sys.modules:
+        import logging
+        logging.basicConfig(level=logging.INFO)
+
+LIBYO_VERSION = tuple(map(int,__VERSION__.split(".")))
+LIBYO_VERSION_MAJOR, LIBYO_VERSION_MINOR, LIBYO_VERSION_PATCH = LIBYO_VERSION[:3]
+
 import logging
-
-DEBUG = False#True
-if DEBUG:
-    logging.basicConfig(level=logging.DEBUG)
-
-LIBYO_VERSION_MAJOR=0
-LIBYO_VERSION_MINOR=9
-LIBYO_VERSION_PATCH=11
-__VERSION__=(LIBYO_VERSION_MAJOR,LIBYO_VERSION_MINOR,LIBYO_VERSION_PATCH);
-LIBYO_VERSION="{0}.{1}.{2}".format(*__VERSION__)
-
-#moved comparison to version module
-from .version import Version as _VersionClass
-
-minVersion              = _VersionClass.LibyoVersion.minVersion
-reqVersion              = _VersionClass.LibyoVersion.requireVersion
-fancyReqVersion         = _VersionClass.LibyoVersion.fancyRequireVersion
-LibyoOutdatedException  = _VersionClass.OutdatedError
-
-logging.getLogger("libyo").info("Running LibYo Version {0}".format(_VersionClass.LibyoVersion.format()))
+logging.getLogger("libyo").info("Running LibYo Version {0}".format(__VERSION__))
 

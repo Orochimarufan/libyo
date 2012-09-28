@@ -50,8 +50,12 @@ def downloadProgress(remote,local,progress=None,mine=True,bytesize=32*1024):
     if valid and not mine==3:
         progress.stop()
 
-def download(url,filename,progress=None,mine=True,bytesize=32*1024):
-    with urllib.request.urlopen(url) as remote:
+def download(url,filename,progress=None,mine=True,bytesize=32*1024,to=0,ua=None):
+    req = urllib.request.Request(url)
+    if ua is not None:
+        req.add_header("User-Agent", ua)
+        req.add_header("Referer", "http://youtube.com")
+    with urllib.request.urlopen(req) as remote:
         with open(filename,"wb") as local:
             return downloadProgress(remote,local,progress,mine,bytesize)
 
