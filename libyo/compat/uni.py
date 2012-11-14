@@ -15,9 +15,11 @@ if PY3: # Python 3.x
     text_type = str
 
     def b(s):
-        return s.encode("UTF-8")
+        if isinstance(s,bytes):return s
+        return bytes(s, "UTF-8")
     def u(s):
-        return s
+        if isinstance(s,str):return s
+        return str(s, "UTF-8")
 
     char = chr;
     unichr=chr;

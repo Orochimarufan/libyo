@@ -40,3 +40,4 @@ class BackendFailedException(YouTubeException):
     def __init__(self, exc=None):
         self.exc = exc
         super(YouTubeException, self).__init__()
+
