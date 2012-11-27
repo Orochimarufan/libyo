@@ -133,6 +133,7 @@ import re
 import sys
 import warnings
 from .ChainMap import ChainMap as _ChainMap, _recursive_repr
+from ..uni import isstring
 
 ########################################################################
 ###  ConfigParser of Python/3.2
@@ -148,8 +149,6 @@ __all__ = ["NoSectionError", "DuplicateOptionError", "DuplicateSectionError",
 DEFAULTSECT = "DEFAULT"
 
 MAX_INTERPOLATION_DEPTH = 10
-
-
 
 # exception classes
 class Error(Exception):
@@ -697,7 +696,7 @@ class RawConfigParser(MutableMapping):
 
         Return list of successfully read files.
         """
-        if isinstance(filenames, str):
+        if isstring(filenames):
             filenames = [filenames]
         read_ok = []
         for filename in filenames:
@@ -1188,7 +1187,7 @@ class SafeConfigParser(ConfigParser):
     """ConfigParser alias for backwards compatibility purposes."""
 
     def __init__(self, *args, **kwargs):
-        super(ConfigParser).__init__(*args, **kwargs)
+        super(ConfigParser,self).__init__(*args, **kwargs)
         warnings.warn(
             "The SafeConfigParser class has been renamed to ConfigParser "
             "in Python 3.2. This alias will be removed in future versions."

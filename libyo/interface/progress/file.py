@@ -148,7 +148,7 @@ class SimpleFileProgress(SimpleProgress2):
         #Bar
         if self._iFormatCom & 1:
             iTiles = iSpace-2
-            iArrow = math.floor( self.position * ( iTiles / self.max ) )
+            iArrow = int(math.floor( self.position * ( iTiles / self.max ) ))
             sBar   = "".join(["[","="*(iArrow-1),">" if iArrow>0 else ""," "*(iTiles-iArrow),"]"]) #progress bar magic ;)
             dFdict ["bar"] = sBar
             iSpace -= len(sBar)

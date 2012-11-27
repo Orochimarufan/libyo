@@ -21,7 +21,7 @@ class AbstractBackend(object):
         try:
             return self._resolve()
         except BackendFailedException as e:
-            logging.exception("Error in Backend %s" % self.__class__.__name__)
+            logging.debug("Error in Backend %s: %s" % (self.__class__.__name__,str(e)))
             return False
     
     @abstractmethod

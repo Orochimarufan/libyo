@@ -71,7 +71,7 @@ class YoutubeDLBackend(AbstractBackend):
         if 'token' not in video_info:
             if 'reason' in video_info:
                 self.trouble('ERROR: YouTube said: %s'
-                             % video_info['reason'][0].decode('utf-8'))
+                             % video_info['reason'][0])
             else:
                 self.trouble('ERROR: "token" parameter not in video info for unknown reason')
             return
