@@ -72,21 +72,20 @@ else:
 import posixpath
 import itertools
 
-from .compat.uni import isstring,nativestring
+from .compat.uni import isstring, nativestring
 
 #+ ide fix to prevent unused imports warnings
-__fix=( 
-        Interpolation, BasicInterpolation,
-        Error, MissingSectionHeaderError, ParsingError,
-        InterpolationError, DEFAULTSECT, MAX_INTERPOLATION_DEPTH)
+__fix = (Interpolation, BasicInterpolation,
+         Error, MissingSectionHeaderError, ParsingError,
+         InterpolationError, DEFAULTSECT, MAX_INTERPOLATION_DEPTH)
 del __fix
 #- ide fix
 
 __all__ = ["NoSectionError", "DuplicateOptionError", "DuplicateSectionError",
            "NoOptionError", "InterpolationError", "InterpolationDepthError",
-           "InterpolationSyntaxError", "ParsingError", "UPathError", 
+           "InterpolationSyntaxError", "ParsingError", "UPathError",
            "MissingSectionHeaderError",
-           "PcsxConfigParser","UConfigParser", "ConfigParser", "RawConfigParser",
+           "PcsxConfigParser", "UConfigParser", "ConfigParser", "RawConfigParser",
            "RawPcsxConfigParser", "RawSpecialConfigParser", "SpecialConfigParser",
            "DEFAULTSECT", "MAX_INTERPOLATION_DEPTH"]
 __export__ = ["NoSectionError", "DuplicateOptionError", "DuplicateSectionError",
@@ -99,20 +98,24 @@ __export__ = ["NoSectionError", "DuplicateOptionError", "DuplicateSectionError",
            "RawPcsxConfigParser", "RawSpecialConfigParser", "SpecialConfigParser",
            "DEFAULTSECT", "MAX_INTERPOLATION_DEPTH"]
 
+
 #[PcsxConfigParser]
 class RawPcsxConfigParser(RawConfigParser): #needed for configs having values out of the sections
     """Provides an Interface to Config files featuring non-sectioned data.
     RawPcsxConfigParser.NOSECT specifies where to put items not having any section defined
     RawPcsxConfigParser.NOSECT_COMMENT specifies wether or not (None) to put a comment before non-sectioned data and what"""
-    NOSECT="__DEFAULT__" # Where to put items without a section?
-    NOSECT_COMMENT="#[NO SECTION]; The following data is not provided with section information!"
+    NOSECT = "__DEFAULT__" # Where to put items without a section?
+    NOSECT_COMMENT = "#[NO SECTION]; The following data is not provided with section information!"
     #NOSECT_COMMENT=None
-    def setnosect(self,key,value):
+    
+    def setnosect(self, key, value):
         if not self.NOSECT in self.sections():
             self.add_section(self.NOSECT)
-        return self.set(self.NOSECT,key,value)
-    def getnosect(self,key,fallback=_UNSET):
-        return self.get(self.NOSECT,key,fallback=fallback)
+        return self.set(self.NOSECT, key, value)
+    
+    def getnosect(self, key, fallback=_UNSET):
+        return self.get(self.NOSECT, key, fallback=fallback)
+    
     def _read(self, fp, fpname):
         """Parse a sectioned configuration file.
 
@@ -142,7 +145,7 @@ class RawPcsxConfigParser(RawConfigParser): #needed for configs having values ou
             # strip inline comments
             for prefix in self._inline_comment_prefixes:
                 index = line.find(prefix)
-                if index == 0 or (index > 0 and line[index-1].isspace()):
+                if index == 0 or (index > 0 and line[index - 1].isspace()):
                     comment_start = index
                     break
             # strip full line comments
@@ -201,12 +204,12 @@ class RawPcsxConfigParser(RawConfigParser): #needed for configs having values ou
                     mo = self._optcre.match(value)
                     if mo:
                         if cursect is None and (self.NOSECT not in self._sections or self.NOSECT not in self._proxies):
-                            sectname=self.NOSECT
-                            cursect=self._dict()
-                            self._sections[self.NOSECT]=cursect
-                            self._proxies[self.NOSECT]=SectionProxy(self, self.NOSECT)
+                            sectname = self.NOSECT
+                            cursect = self._dict()
+                            self._sections[self.NOSECT] = cursect
+                            self._proxies[self.NOSECT] = SectionProxy(self, self.NOSECT)
                             elements_added.add(self.NOSECT)
-                        optname, vi, optval = mo.group('option', 'vi', 'value')
+                        optname, _, optval = mo.group('option', 'vi', 'value')
                         if not optname:
                             e = self._handle_error(e, fpname, lineno, line)
                         optname = self.optionxform(optname.rstrip())
@@ -233,6 +236,7 @@ class RawPcsxConfigParser(RawConfigParser): #needed for configs having values ou
         if e:
             raise e
         self._join_multiline_values()
+    
     def write(self, fp, space_around_delimiters=True):
         """Write an .ini-format representation of the configuration state.
 
@@ -249,30 +253,33 @@ class RawPcsxConfigParser(RawConfigParser): #needed for configs having values ou
             self._write_section(fp, self.default_section,
                                     self._defaults.items(), d)
         for section in self._sections:
-            if section==self.NOSECT:
+            if section == self.NOSECT:
                 continue
             self._write_section(fp, section,
                                 self._sections[section].items(), d)
+    
     def _write_nosect(self, fp, section_items, delimiter):
         """Write the Values without a section"""
         if self.NOSECT_COMMENT is not None:
-            fp.write(self.NOSECT_COMMENT+"\n")
+            fp.write(self.NOSECT_COMMENT + "\n")
         for key, value in section_items:
             value = self._interpolation.before_write(self, self.NOSECT, key, value)
             if value is not None or not self._allow_no_value:
-                value = delimiter + str(value).replace("\n","\n\t")
+                value = delimiter + str(value).replace("\n", "\n\t")
             else:
                 value = ""
             fp.write("{}{}\n".format(key, value))
         fp.write("\n")
 
-class PcsxConfigParser(RawPcsxConfigParser, ConfigParser): pass
+
+class PcsxConfigParser(RawPcsxConfigParser, ConfigParser):
+    pass
     #Apply Changes made in ConfigParser to RawPcsxConfigParser
+
 
 class ExtendedInterpolation(CPEI):
     """FIX/libyo; use libyo.configparser.CPEI for original version"""
-    def _interpolate_some(self, parser, option, accum, rest, section, map,
-                          depth):
+    def _interpolate_some(self, parser, option, accum, rest, section, map, depth):
         if depth > MAX_INTERPOLATION_DEPTH:
             raise InterpolationDepthError(option, section, rest)
         while rest:
@@ -323,6 +330,7 @@ class ExtendedInterpolation(CPEI):
                     option, section,
                     "'$' must be followed by '$' or '{', "
                     "found: %r" % (rest,))
+
 
 #[SpecialConfigParser]
 class RawSpecialConfigParser(RawPcsxConfigParser):
@@ -375,7 +383,7 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
             # strip inline comments
             for prefix in self._inline_comment_prefixes:
                 index = line.find(prefix)
-                if index == 0 or (index > 0 and line[index-1].isspace()):
+                if index == 0 or (index > 0 and line[index - 1].isspace()):
                     comment_start = index
                     break
             # strip full line comments
@@ -401,7 +409,7 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
             first_nonspace = self.NONSPACECRE.search(line)
             cur_indent_level = first_nonspace.start() if first_nonspace else 0
             if (cursect is not None and optname and cur_indent_level > indent_level):
-                if (sectname,optname) in list_list:
+                if (sectname, optname) in list_list:
                     cursect[optname][list_index].append(value)
                 else:
                     cursect[optname].append(value)
@@ -436,19 +444,19 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
                     mo = self._optcre.match(value)
                     if mo:
                         if cursect is None and (self.NOSECT not in self._sections or self.NOSECT not in self._proxies):
-                            sectname=self.NOSECT
-                            cursect=self._dict()
-                            self._sections[self.NOSECT]=cursect
-                            self._proxies[self.NOSECT]=SectionProxy(self, self.NOSECT)
+                            sectname = self.NOSECT
+                            cursect = self._dict()
+                            self._sections[self.NOSECT] = cursect
+                            self._proxies[self.NOSECT] = SectionProxy(self, self.NOSECT)
                             elements_added.add(self.NOSECT)
-                        optname, vi, optval = mo.group('option', 'vi', 'value')
+                        optname, _, optval = mo.group('option', 'vi', 'value')
                         if not optname:
                             e = self._handle_error(e, fpname, lineno, line)
                         optname = self.optionxform(optname.rstrip())
-                        if optname[-2:]=="[]":
-                            optname=optname[:-2]
+                        if optname[-2:] == "[]":
+                            optname = optname[:-2]
                             if (sectname, optname) not in elements_added:
-                                cursect[optname]=[]
+                                cursect[optname] = []
                                 elements_added.add((sectname, optname))
                                 list_list.add((sectname, optname))
                             if optval is not None:
@@ -456,7 +464,7 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
                                 cursect[optname].append([optval])
                             else:
                                 cursect[optname].append(None)
-                            list_index=len(cursect[optname])-1
+                            list_index = len(cursect[optname]) - 1
                         else:
                             if (self._strict and
                                 (sectname, optname) in elements_added):
@@ -482,49 +490,55 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
         if e:
             raise e
         self._join_multiline_values()
+    
     def _join_multiline_values(self):
         defaults = self.default_section, self._defaults
         all_sections = itertools.chain((defaults,), self._sections.items())
         for section, options in all_sections:
             for name, val in options.items():
-                if (section,name) in self.__lists:
-                    options[name] = [ self.__join_mlv(section,name,i) for i in val ]
+                if (section, name) in self.__lists:
+                    options[name] = [self.__join_mlv(section, name, i) for i in val]
                     # dirty hack to avoid x[]= entries
-                    options[name] = [ i for i in options[name] if i != "" ]
+                    options[name] = [i for i in options[name] if i != ""]
                 else:
-                    options[name] = self.__join_mlv(section,name,val)
-    def __join_mlv(self,section, name, val):
+                    options[name] = self.__join_mlv(section, name, val)
+    
+    def __join_mlv(self, section, name, val):
         if isinstance(val, list):
             val = '\n'.join(val).rstrip()
         return self._interpolation.before_read(self, section, name, val)
+    
     def _write_section(self, fp, section_name, section_items, delimiter):
         """Write a single section to the specified `fp'."""
         fp.write("[{}]\n".format(section_name))
         for key, value in section_items:
-            if value.__class__.__name__=="list":
+            if value.__class__.__name__ == "list":
                 for i in value:
-                    self._write_option(fp, delimiter, section_name, key+"[]", i)
+                    self._write_option(fp, delimiter, section_name, key + "[]", i)
             else:
                 self._write_option(fp, delimiter, section_name, key, value)
         fp.write("\n")
+    
     def _write_nosect(self, fp, section_items, delimiter):
         """Write the Values without a section"""
         if self.NOSECT_COMMENT is not None:
-            fp.write(self.NOSECT_COMMENT+"\n")
+            fp.write(self.NOSECT_COMMENT + "\n")
         for key, value in section_items:
-            if value.__class__.__name__=="list":
+            if value.__class__.__name__ == "list":
                 for i in value:
-                    self._write_option(fp, delimiter, self.NOSECT, key+"[]", i)
+                    self._write_option(fp, delimiter, self.NOSECT, key + "[]", i)
             else:
                 self._write_option(fp, delimiter, self.NOSECT, key, value)
         fp.write("\n")
-    def _write_option(self,fp,delimiter,section,key,value):
+    
+    def _write_option(self, fp, delimiter, section, key, value):
         value = self._interpolation.before_write(self, section, key, value)
         if value is not None or not self._allow_no_value:
-            value = delimiter + str(value).replace("\n","\n\t")
+            value = delimiter + str(value).replace("\n", "\n\t")
         else:
             value = ""
         fp.write("{}{}\n".format(key, value))
+    
     def _validate_value_types(self, section="", option="", value=""):
         """Raises a TypeError for non-string values.
 
@@ -551,8 +565,9 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
                 pass
             else:
                 raise TypeError("option values must be strings or lists of strings")
-    def set(self,section,option,value):
-        if isinstance(value,list):
+    
+    def set(self, section, option, value):
+        if isinstance(value, list):
             value = [self._interpolation.before_set(self, section, option, i) for i in value]
         elif value:
             value = self._interpolation.before_set(self, section, option, value)
@@ -564,6 +579,7 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
             except KeyError:
                 raise NoSectionError(section)
         sectdict[self.optionxform(option)] = value
+    
     def get(self, section, option, raw=False, vars=None, fallback=_UNSET):
         try:
             d = self._unify_values(section, vars)
@@ -583,12 +599,13 @@ class RawSpecialConfigParser(RawPcsxConfigParser):
 
         if raw or value is None:
             return value
-        elif isinstance(value,list):
+        elif isinstance(value, list):
             return [self._interpolation.before_get(self, section, option, i, d) for i in value]
         else:
             return self._interpolation.before_get(self, section, option, value, d)
 
-class SpecialConfigParser(ConfigParser,RawSpecialConfigParser):
+
+class SpecialConfigParser(ConfigParser, RawSpecialConfigParser):
     """
     SpecialConfigParser
     
@@ -610,8 +627,11 @@ class SpecialConfigParser(ConfigParser,RawSpecialConfigParser):
     """
     pass
 
+
 #[UConfigParser] and [UInterpolation] Stuff
-class UPathError(Error): pass
+class UPathError(Error):
+    pass
+
 
 class UInterpolation(ExtendedInterpolation):
     """UInterpolation [class(ExtendedInterpolation)]
@@ -657,7 +677,7 @@ class UInterpolation(ExtendedInterpolation):
                     raise InterpolationSyntaxError(option, section,
                         "bad interpolation variable reference %r" % rest)
                 path = list(posixpath.split(parser.optionxform(m.group(1))))
-                if path[0]=="":
+                if path[0] == "":
                     path.pop(0)
                 rest = rest[m.end():]
                 sect = section
@@ -688,6 +708,7 @@ class UInterpolation(ExtendedInterpolation):
                     option, section,
                     "'$' must be followed by '$' or '{', "
                     "found: %r" % (rest,))
+
 
 class UConfigParser(ConfigParser):
     """UConfigParser [class(ConfigParser)]
@@ -721,7 +742,8 @@ class UConfigParser(ConfigParser):
         get*(section, option)
             Default getter
     *=[,int,float,boolean]"""
-    _DEFAULT_INTERPOLATION=UInterpolation()
+    _DEFAULT_INTERPOLATION = UInterpolation()
+    
     #Set functions
     def uset(self, path, value, createDir=False):
         """@ARG string     path (file)
@@ -731,9 +753,9 @@ class UConfigParser(ConfigParser):
         @DSC Set path to value
         @DSC if createDir is true it too creates Directories
         @EQA UNIX 'echo $value > $path'"""
-        (section, key)=posixpath.split(path)
-        if key=="":
-            raise UPathError("set(): ["+path+"]: Expected File")
+        (section, key) = posixpath.split(path)
+        if key == "":
+            raise UPathError("set(): [" + path + "]: Expected File")
         else:
             if not self.has_section(section):
                 if createDir:
@@ -742,16 +764,17 @@ class UConfigParser(ConfigParser):
                     raise NoSectionError(section)
             return self.set(section, key, value)
     echo = uset
+    
     def touch(self, path, createDir=False):
         """@ARG string     path
         @ARG boolean    [createDir] False
         @DSC implies the Unix touch command
         @DSC if createDir is true it too creates Directories
         @EQA UNIX 'touch'"""
-        (section, key)=posixpath.split(path)
-        if key=="":
+        (section, key) = posixpath.split(path)
+        if key == "":
             if not createDir:
-                raise UPathError("touch(): ["+path+"]: Expected File")
+                raise UPathError("touch(): [" + path + "]: Expected File")
             else:
                 self.add_section(section)
                 return
@@ -762,112 +785,125 @@ class UConfigParser(ConfigParser):
                 raise NoSectionError(section)
         if not self.has_option(section, key):
             self.set(section, key, "")
+    
     def create(self, path):
         """@ARG string     path
         @DSC touches/creates file and/or directory if nonexistent
         @EQA THIS 'touch(path, True)'"""
         self.touch(path, True)
+    
     def rm(self, path):
         """@ARG string     path (file)
         @RET boolean    success
         @DSC Removes File
         @EQA UNIX 'rm'"""
-        (section, key)=posixpath.split(path)
-        if key=="":
-            raise UPathError("rm(): ["+path+"]: Expected File")
+        (section, key) = posixpath.split(path)
+        if key == "":
+            raise UPathError("rm(): [" + path + "]: Expected File")
         else:
             return self.remove_option(section, key)
+    
     def mkdir(self, path):
         """@ARG string     path (dir)
         @RET boolean    success
         @DSC creates new directory
         @EQA UNIX 'mkdir'"""
-        if path[-1]==posixpath.sep:
-            section=path[:-1]
+        if path[-1] == posixpath.sep:
+            section = path[:-1]
         else:
-            section=path
+            section = path
         return self.add_section(section)
+    
     def rmdir(self, path):
         """@ARG string     path (dir)
         @RET boolean    success
         @DSC Clears (ATTENTION: even non-empty) Directory; no subdirectories
         @EQA [UNIX 'rm -rf']; [UNIX 'rmdir']"""
-        (section, key)=posixpath.split(path)
-        if key!="":
-            raise UPathError("rmdir(): ["+path+"]: Expected Directory")
+        (section, key) = posixpath.split(path)
+        if key != "":
+            raise UPathError("rmdir(): [" + path + "]: Expected Directory")
         else:
             return self.remove_section(section)
+    
     def rmtree(self, path):
         """@ARG string     path (dir)
         @DSC Recursively removes path
         @EQA UNIX 'rm -rf'; DOS 'rmtree'"""
-        (section, key)=posixpath.split(path)
-        if key!="":
-            raise UPathError("rmdir(): ["+path+"]: Expected Directory")
+        (section, key) = posixpath.split(path)
+        if key != "":
+            raise UPathError("rmdir(): [" + path + "]: Expected Directory")
         else:
             for i in self.sections():
-                if i[:len(section)]==section:
+                if i[:len(section)] == section:
                     self.remove_section(i)
+    
     def addtree(self, path, tree_dict):
         """@ARG string path (dir)
         @ARG dict   tree_dict
         @DSC Puts dict to path/*"""
-        if path[-1]==posixpath.sep:
-            section=path[:-1]
+        if path[-1] == posixpath.sep:
+            section = path[:-1]
         else:
-            section=path
+            section = path
         for i in tree_dict.items():
-            self.uset(posixpath.join(section, i[0]), i[1],  True)
+            self.uset(posixpath.join(section, i[0]), i[1], True)
+    
     #Get functions
     def gettree(self, path):
         """@ARG string     path (dir)
         @RET dict       section
         @DSC get a ini section"""
-        section=posixpath.split(path)[0]
+        section = posixpath.split(path)[0]
         self.__getitem__(section)
+    
     def ls(self, path):
         """@ARG string     path (dir)
         @RET list       contents
         @EQA UNIX 'ls'"""
-        if path[-1]==posixpath.sep and path!="/":
-            root=path[:-1]
+        if path[-1] == posixpath.sep and path != "/":
+            root = path[:-1]
         else:
-            root=path
-        lst=list()
-        cnt=root.count(posixpath.sep)
+            root = path
+        lst = list()
+        cnt = root.count(posixpath.sep)
         for i in self.sections():
-            if root=="/":
-                if i[0]=="/" and i.count(posixpath.sep)==1:
+            if root == "/":
+                if i[0] == "/" and i.count(posixpath.sep) == 1:
                     if i[1:] not in lst: lst.append(i[1:])
                 else:
-                    c=i.split(posixpath.sep)[0]
-                    if c not in lst: lst.append(c)
-            elif i[:len(root)]==root and cnt<i.count(posixpath.sep):
-                c=i.split(posixpath.sep)[cnt+1]
-                if c not in lst: lst.append(c)
+                    c = i.split(posixpath.sep)[0]
+                    if c not in lst:
+                        lst.append(c)
+            elif i[:len(root)] == root and cnt < i.count(posixpath.sep):
+                c = i.split(posixpath.sep)[cnt + 1]
+                if c not in lst:
+                    lst.append(c)
         if self.has_section(root):
             for i in self.options(root):
                 lst.append(i)
         return lst
+    
     def lsr(self, path):
-        lst=self.ls(path)
-        dct={}
+        lst = self.ls(path)
+        dct = {}
         for i in lst:
             if self.isdir(posixpath.join(path, i, "")):
-                dct[i]=self.lsr(posixpath.join(path, i))
+                dct[i] = self.lsr(posixpath.join(path, i))
             else:
-                dct[i]=""
+                dct[i] = ""
         return dct
+    
     def ls1(self, path):
         """@ARG string     path (dir)
         @RET list       files
         @DSC list files in path
         @EQA UNIX 'find -depth 1 -type f'"""
-        if path[-1]==posixpath.sep:
-            section=path[:-1]
+        if path[-1] == posixpath.sep:
+            section = path[:-1]
         else:
-            section=path
+            section = path
         return self.options(section)
+    
     def uget(self, path, **kwargs):
         """@ARG string        path (file)
         @ARG boolean       [raw]      False
@@ -876,9 +912,10 @@ class UConfigParser(ConfigParser):
         @RET string        value
         @DSC Returns value of path [Last 3 @ARGs are kwarg-only]
         @EQA UNIX 'cat'"""
-        (section, key)=posixpath.split(path)
+        (section, key) = posixpath.split(path)
         return super().get(section, key, **kwargs)
     cat = uget
+    
     def ugetint(self, path, **kwargs):
         """@ARG string     path (file)
         @ARG boolean    [raw]         False
@@ -886,8 +923,9 @@ class UConfigParser(ConfigParser):
         @ARG integer    [fallback]    ?
         @RET integer    value
         @DSC Returns value of path as integer [Last 3 @ARGs are kwarg-only]"""
-        (section, key)=posixpath.split(path)
+        (section, key) = posixpath.split(path)
         return super().getint(section, key, **kwargs)
+    
     def ugetfloat(self, path, **kwargs):
         """@ARG string       path (file)
         @ARG boolean      [raw]       False
@@ -895,8 +933,9 @@ class UConfigParser(ConfigParser):
         @ARG float        [fallback]  ?
         @RET float        value
         @DSC Returns value of path as floating-point number [Last 3 @ARGs are kwarg-only]"""
-        (section, key)=posixpath.split(path)
+        (section, key) = posixpath.split(path)
         return super().getfloat(section, key, **kwargs)
+    
     def ugetboolean(self, path, **kwargs):
         """@ARG string     path (file)
         @ARG boolean    [raw]         False
@@ -904,29 +943,32 @@ class UConfigParser(ConfigParser):
         @ARG boolean    [fallback]    ?
         @RET boolean    value
         @DSC Returns value of path as boolean value [Last 3 @ARGs are kwarg-only]"""
-        (section, key)=posixpath.split(path)
+        (section, key) = posixpath.split(path)
         return super().getboolean(section, key, **kwargs)
+    
     #Check Functions
     def exists(self, path):
         """@ARG string     path
         @RET boolean    exists
         @DSC Return True if path is an existing file/directory; otherwise False
         @EQA UNIX 'test -e'"""
-        (section, key)=posixpath.split(path)
-        if key!="":
+        (section, key) = posixpath.split(path)
+        if key != "":
             return self.has_option(section, key)
         else:
             return self.has_section(section)
+    
     def isfile(self, path):
         """@ARG string     path
         @RET boolean    is_file
         @DSC Return True if path is an existing file; otherwise False
         @EQA UNIX 'test -f'"""
-        (section, key)=posixpath.split(path)
-        return key!="" and self.has_section(section) and self.has_option(section, key)
+        (section, key) = posixpath.split(path)
+        return key != "" and self.has_section(section) and self.has_option(section, key)
+    
     def isdir(self, path):
         """@ARG string     path
         @RET boolean    is_dir
         @DSC Return True if path is an existing directory; otherwise False"""
-        (section, key)=posixpath.split(path)
-        return key=="" and self.has_section(section)
+        (section, key) = posixpath.split(path)
+        return key == "" and self.has_section(section)

@@ -12,7 +12,7 @@ import socket
 import sys
 import datetime
 import logging
-from ...compat.features.htmlparser_fallback import parse as parsehtm
+from ...compat.features.htmlparser import parse as parsehtm
 
 
 def clean_html(html):
@@ -134,7 +134,7 @@ class YoutubeDLBackend(AbstractBackend):
             url_strs = video_info["url_encoded_fmt_stream_map"][0].split(",")
             url_datas = [parse.parse_qs(s) for s in url_strs]
             url_datas = filter(lambda d: "itag" in d and "url" in d, url_datas)
-            url_map = dict([(int(d["itag"][0]), 
+            url_map = dict([(int(d["itag"][0]),
                              "".join((d["url"][0], "&signature=", d["sig"][0])))
                             for d in url_datas])
 

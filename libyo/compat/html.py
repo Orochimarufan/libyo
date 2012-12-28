@@ -1,6 +1,6 @@
 """
 ----------------------------------------------------------------------
-- youtube.resolve.CacheBackend: caches resolved video urls
+- compat.html: py3k html.* compatibility proxy
 ----------------------------------------------------------------------
 - Copyright (C) 2011-2012  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
@@ -19,26 +19,11 @@
 - along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ----------------------------------------------------------------------
 """
-from __future__ import absolute_import, unicode_literals, division
+from __future__ import absolute_import, unicode_literals
 
-from ...caching import Cache
-from .AbstractBackend import AbstractBackend
-from datetime import timedelta
-
-
-class CacheBackend(AbstractBackend):
-    def __init__(self, backend):
-        self.backend = backend
-        self.cache = Cache(default_duration=timedelta(minutes=10))
-    
-    def clear(self):
-        self.cache.clear()
-    
-    def _resolve(self):
-        if self.video_id not in self.cache:
-            self.backend.setup(self.video_id)
-            result = self.backend.resolve()
-            self.cache.store(self.video_id, result)
-            return result
-        else:
-            return self.cache.retreive(self.video_id)
+from . import PY3
+if (PY3):
+    from html import entities, parser, __file__
+else:
+    import HTMLParser as parser
+    import htmlentitydefs as entities

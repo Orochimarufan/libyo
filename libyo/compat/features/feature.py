@@ -1,6 +1,6 @@
 """
 ----------------------------------------------------------------------
-- youtube.resolve.CacheBackend: caches resolved video urls
+- compat.features.feature: Feature Implementation Selection Mechanism
 ----------------------------------------------------------------------
 - Copyright (C) 2011-2012  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
@@ -19,26 +19,37 @@
 - along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ----------------------------------------------------------------------
 """
-from __future__ import absolute_import, unicode_literals, division
 
-from ...caching import Cache
-from .AbstractBackend import AbstractBackend
-from datetime import timedelta
+from __future__ import absolute_import, unicode_literals
+
+import inspect
+import logging
 
 
-class CacheBackend(AbstractBackend):
-    def __init__(self, backend):
-        self.backend = backend
-        self.cache = Cache(default_duration=timedelta(minutes=10))
-    
-    def clear(self):
-        self.cache.clear()
-    
-    def _resolve(self):
-        if self.video_id not in self.cache:
-            self.backend.setup(self.video_id)
-            result = self.backend.resolve()
-            self.cache.store(self.video_id, result)
-            return result
+def CompatibilityFeature(name, IMPLS, module="libyo.compat.features"):
+    import importlib as _import
+    for n, p in IMPLS:
+        try:
+            MODULE = _import.import_module(p, module)
+        except ImportError:
+            continue
         else:
-            return self.cache.retreive(self.video_id)
+            IMPL = n
+            break
+    else:
+        IMPL = False
+    _set = inspect.currentframe().f_back.f_globals
+    _set["IMPL"] = IMPL
+    if not IMPL:
+        raise ImportError("Could not Import any {0} Implementation!".format(name))
+    _set["MODULE"] = MODULE
+    if hasattr(MODULE, "__all__"):
+        _iter = MODULE.__all__
+    else:
+        _iter = dir(MODULE)
+    for i in _iter:
+        _set[i] = getattr(MODULE, i)
+    del _iter
+    del _set
+
+    logging.getLogger(module).info("{0} Implementation: {1}".format(name, IMPL))

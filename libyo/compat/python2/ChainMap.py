@@ -1,11 +1,6 @@
-'''
-Created on 01.02.2012
-
-@author: hinata
-'''
-
-LIBYO_COMPAT="python2"
-LIBYO_TARGET="libyo/+"
+"""
+Python 3.x ChainMap backport for Python 2.x
+"""
 
 from collections import MutableMapping
 ########################################################################
@@ -15,6 +10,8 @@ try:
     from thread import get_ident
 except ImportError:
     from dummy_thread import get_ident
+
+
 def _recursive_repr(fillvalue='...'):
     'Decorator to make a repr function return fillvalue for a recursive call'
 
@@ -40,6 +37,7 @@ def _recursive_repr(fillvalue='...'):
         return wrapper
 
     return decorating_function
+
 
 ########################################################################
 ###  ChainMap

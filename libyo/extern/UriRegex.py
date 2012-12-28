@@ -31,17 +31,18 @@ Regular expressions for URI (rfc3896) and IRI (rfc3987) validation.
     >>> assert not regex.match('^%s$' % patterns['relative_ref'], '#f#g')
 
 """
+
 try:
     import regex #@UnusedImport
 except ImportError:
     import logging
-    logging.getLogger("libyo").\
-    warning('libyo.extern.UriRegex: Could not import regex. The stdlib re (at least until python 3.2) '
-          'cannot compile most regular expressions in this module (reusing '
+    logging.getLogger(__name__).\
+    warning('Could not import regex. The stdlib re (at least until python 3.2) '
+          'cannot compile the regular expressions in this module (reusing '
           'capture group names on different branches of an alternation).')
-    HAS_REGEX=False
+    HAS_REGEX = False
 else:
-    HAS_REGEX=True
+    HAS_REGEX = True
 
 __all__ = ('UriRegex')
 
@@ -191,38 +192,40 @@ _iri_rules = (
     
 )
 
+
 class UriRegex(object):
-    instance = None;
+    instance = None
     patterns = {}
+    
     @classmethod
     def __makepatterns(klass):
         #: mapping of rfc3986 / rfc3987 rule names to regular expressions
         for name, rule in _common_rules[::-1] + _uri_rules[::-1] + _iri_rules[::-1]:
             klass.patterns[name] = rule.format(**klass.patterns)
         del name, rule
+    
     @classmethod
     def getInstance(klass):
         if klass.instance is None:
             klass.instance = klass()
         return klass.instance
+    
     def __init__(self):
-        try:
-            import regex
-        except ImportError:
-            import logging
-            logging.getLogger("libyo").error("libyo.extern.UriRegex: Could not Import 'regex'. Please install the regex module from PyPI.")
-            return
+        if (not HAS_REGEX):
+            logging.getLogger(__name__).\
+            error("Cannot compile patterns. Please install the regex module from PyPI.")
+        
         self.uri = regex.compile(self.patterns["URI"])
         self.iri = regex.compile(self.patterns["IRI"])
         self.uriMatch = regex.compile("^{0}$".format(self.patterns["URI"]))
         self.iriMatch = regex.compile("^{0}$".format(self.patterns["IRI"]))
-        def isUri(self,string):
-            """Check for URI (rfc3896) Validity"""
-            return bool(self.uriMatch.match(string))
-        def isIri(self,string):
-            """Check for IRI (rfc3987) Validity"""
-            return bool(self.iriMatch.match(string))
-        self.isUri=isUri.__get__(self)
-        self.isIri=isIri.__get__(self)
+        
+    def isUri(self, string):
+        """Check for URI (rfc3896) Validity"""
+        return bool(self.uriMatch.match(string))
+    
+    def isIri(self, string):
+        """Check for IRI (rfc3987) Validity"""
+        return bool(self.iriMatch.match(string))
 
 UriRegex._UriRegex__makepatterns()

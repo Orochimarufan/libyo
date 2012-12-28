@@ -1,6 +1,26 @@
-#!/usr/bin/python3
+"""
+----------------------------------------------------------------------
+- youtube.resolve.data: info about youtube video formats
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
+"""
+from __future__ import absolute_import, unicode_literals, division
 
-from __future__ import unicode_literals
 
 class FMTValue(object):
     def __init__(self, fmt, c, vc, vp, vres, vbits, ac, abits, asr, ach):
@@ -16,31 +36,36 @@ class FMTValue(object):
         self.audio_bitrate = abits
         self.audio_samplerate = asr
         self.audio_channels = ach
+    
     def __str__(self):
         return self.format_caption()
-    def format_caption(self,template="{video_res_progressive} {container}/{video_codec}"):
-        return template.format(**self.__dict__,
-                video_res_progressive = self.video_resolution.progressive,
-                video_res_vga = self.video_resolution.vga,
-                video_res_height = self.video_resolution.h,
-                video_res_width = self.video_resolution.w)
+    
+    def format_caption(self, template="{video_res_progressive} {container}/{video_codec}"):
+        return template.format(video_res_progressive=self.video_resolution.progressive,
+                video_res_vga=self.video_resolution.vga,
+                video_res_height=self.video_resolution.h,
+                video_res_width=self.video_resolution.w, **self.__dict__)
+
 
 class VideoResolution(object):
-    def __init__(self,w,h,progressive,vga):
+    def __init__(self, w, h, progressive, vga):
         self.progressive = progressive
         self.vga = vga
         self.w = w
         self.h = h
+        
     def __str__(self):
-        return "{0}x{1}".format(self.w,self.h)
-    def __eq__(self,other):
-        if isinstance(other,VideoResolution):
+        return "{0}x{1}".format(self.w, self.h)
+    
+    def __eq__(self, other):
+        if isinstance(other, VideoResolution):
             if self.progressive == other.progressive or \
                 self.vga == other.vga or \
                 self.w == other.w and self.h == other.h:
                 return True
             return False
         return NotImplemented
+
 
 resolutions = {
         #Standard Resolutions

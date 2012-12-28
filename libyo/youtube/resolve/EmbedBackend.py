@@ -8,6 +8,7 @@ from __future__ import absolute_import, unicode_literals, division
 
 from .AbstractBackend import AbstractBackend
 from .WebBackend import WebBackend
+from ..exception import BackendFailedException
 from ... import compat
 import logging
 
@@ -35,4 +36,9 @@ class EmbedBackend(AbstractBackend):
         else:
             data = conn.read()
             conn.close()
-        return WebBackend.fvars_parser(self._decode(data))
+        f = WebBackend.fvars_parser(self._decode(data))
+        if (not f):
+            raise BackendFailedException("fvars parser returned false")
+        if ("token" not in f or "reason" in f):
+            raise BackendFailedException(f["reason"] if ("reason" in f) else "No Reason given.")
+        return f

@@ -1,9 +1,26 @@
-'''
-Created on 30.11.2011
-
-@author: hinata
-'''
-# You need GNUWIN32 magic1.dll to use this on Windows
+"""
+----------------------------------------------------------------------
+- etree.py: ElementTree Implementation Proxy
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
+You need GNUWIN32 magic1.dll to use this on Windows
+"""
+from __future__ import absolute_import
 #@PydevCodeAnalysisIgnore
 
 import os.path
@@ -52,7 +69,7 @@ class Magic:
         c = magic_buffer(self.cookie, buf)
         
         if PY_MAJOR_VERSION >= 3:
-            c=c.decode(OS_F_ENC)
+            c = c.decode(OS_F_ENC)
         
         return c
 
@@ -66,7 +83,7 @@ class Magic:
             raise IOError("File does not exist: " + filename)
         
         if PY_MAJOR_VERSION >= 3:
-            filename=filename.encode(OS_F_ENC)
+            filename = filename.encode(OS_F_ENC)
         
         c = magic_file(self.cookie, filename)
         

@@ -1,12 +1,26 @@
 """
-@author Orochimarufan
-@module libyo.compat.uni
-@created 2012-05-04
-@modified 2012-05-04
-@inspired SIX
+----------------------------------------------------------------------
+- compat.uni: String handling compatibility code
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
 """
+from __future__ import absolute_import, unicode_literals
 
-from __future__ import absolute_import
 from . import PY3
 
 if PY3: # Python 3.x
@@ -15,34 +29,39 @@ if PY3: # Python 3.x
     text_type = str
 
     def b(s):
-        if isinstance(s,bytes):return s
+        if (isinstance(s, bytes)):
+            return s
         return bytes(s, "UTF-8")
+    
     def u(s):
-        if isinstance(s,str):return s
+        if (isinstance(s, str)):
+            return s
         return str(s, "UTF-8")
 
-    char = chr;
-    unichr=chr;
-    unistr=str;
-    encstr=str;
+    chr = chr
+    unichr = chr
+    unistr = str
+    encstr = bytes
 
     def unicode_unescape(string):
-        return bytes(string,"utf-8").decode("unicode_escape");
+        return bytes(string, "UTF-8").decode("unicode_escape")
+    
     def unicode_escape(string):
-        return str(string.encode("unicode_escape"),"utf-8");
-    string_unescape=unicode_unescape;
-    string_escape=unicode_escape;
+        return str(string.encode("unicode_escape"), "UTF-8")
+    
+    string_unescape = unicode_unescape
+    string_escape = unicode_escape
 
     def isstring(s):
-        return isinstance(s,str)
+        return isinstance(s, str)
+    
     def isgenericstring(s):
-        return isinstance(s,str) or isinstance(s,bytes)
+        return isinstance(s, str) or isinstance(s, bytes)
 
     def nativestring(s):
-        if isinstance(s,bytes):
-            return str(s,"UTF-8")
-        else:
+        if (isinstance(s, str)):
             return s
+        return str(s, "UTF-8")
 
 else: # Python 2.x
     string_type = basestring
@@ -51,34 +70,37 @@ else: # Python 2.x
 
     def b(s):
         return s
+    
     def u(s):
-        return unicode(s,"unicode_escape")
+        return unicode(s, "unicode_escape")
 
-    char = unichr;
-    unichr = unichr;
-    unistr = unicode;
-    encstr = bytes;
+    chr = unichr
+    unichr = unichr
+    unistr = unicode
+    encstr = bytes
 
     def unicode_unescape(string):
-        return string.decode("unicode_escape");
+        return string.decode("unicode_escape")
+    
     def unicode_escape(string):
-        return string.encode("unicode_escape");
+        return string.encode("unicode_escape")
+    
     def string_unescape(string):
-        return string.decode("string_escape");
+        return string.decode("string_escape")
+    
     def string_escape(string):
-        return string.encode("string_escape");
+        return string.encode("string_escape")
 
     def isstring(s):
-        return isinstance(s,str) or isinstance(s,unicode)
+        return isinstance(s, str) or isinstance(s, unicode)
     isgenericstring = isstring
 
     def nativestring(s):
-        if isinstance(s,unicode):
-            return str(s)
-        else:
+        if (isinstance(s, str)):
             return s
+        return str(s)
 
-b.__doc__="""Bytes Literal"""
-u.__doc__="""Unicode Literal"""
+b.__doc__ = """Bytes Literal"""
+u.__doc__ = """Unicode Literal"""
 
-__all__ = ["u","b"]
+__all__ = ["u", "b"]

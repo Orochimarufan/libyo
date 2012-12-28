@@ -1,10 +1,9 @@
 '''
-Created on 02.02.2012
-
-@author: hinata
+deprecated reflection utilities
 '''
 
-"DEPRECATED!!!!!!!!!!!!!!!!!"
+import warnings
+warnings.warn("libyo.util.reflect1 is deprecated!", DeprecationWarning)
 
 def alias(func,*positional,**keyword):
     def __aliased(*args,**kwargs):

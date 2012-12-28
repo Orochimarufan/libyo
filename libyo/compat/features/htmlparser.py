@@ -1,19 +1,33 @@
 """
-@author Orochimarufan
-@module libyo.compat.features.htmlparser_fallback
-@created 2012-05-12
-@modified 2012-09-28
+----------------------------------------------------------------------
+- compat.features.htmlparser: Simple HTML Parser Implementation
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
 """
 
 from __future__ import absolute_import, unicode_literals, division
 
-from .. import PY3, getModule
+from .. import PY3
 from ..uni import unichr
 
 from collections import deque
 
-htmlparser = getModule("html").parser
-htmlentities = getModule("html").entities
+from ..html import entities, parser
 
 
 class Document(object):
@@ -121,14 +135,14 @@ class ParserStack(deque):
         DTag(self.last(), name, data)
 
 
-class Parser(htmlparser.HTMLParser):
+class Parser(parser.HTMLParser):
     def __init__(self, *a, **b):
         self.stack = ParserStack()
         self.rawddata = ""
         if PY3:
             super(Parser, self).__init__(*a, **b)
         else:
-            htmlparser.HTMLParser.__init__(self, *a, **b)
+            parser.HTMLParser.__init__(self, *a, **b)
     
     def handle_starttag(self, name, attrs):
         self.stack.open(name, attrs)
@@ -151,7 +165,7 @@ class Parser(htmlparser.HTMLParser):
         self.handle_data(c)
     
     def handle_entityref(self, name):
-        i = htmlentities.name2codepoint.get(name)
+        i = entities.name2codepoint.get(name)
         if i is not None:
             c = unichr(i)
         else:

@@ -1,26 +1,35 @@
-'''
-Created on 19.02.2012
+"""
+----------------------------------------------------------------------
+- urllib.handlers: additional urllib handlers
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
+"""
+from __future__ import absolute_import, unicode_literals
 
-@author: hinata
-'''
+from . import request as _request, parse as _parse, error as _error, response as _response
 
-from ..compat import getModule as _compat
-_urllib = _compat("urllib")
-_request=_urllib.request
-_parse=_urllib.parse
-_error=_urllib.error
-_response=_urllib.response
-#_request = _compat("urllib.request")
-#_parse = _compat("urllib.parse")
-#_error = _compat("urllib.error")
-#_response = _compat("urllib.response")
 import posixpath as _posixpath
 try: #GZip module may not be available
     import gzip as _gzip
 except ImportError:
-    HAS_GZIP=False
+    HAS_GZIP = False
 else:
-    HAS_GZIP=True
+    HAS_GZIP = True
 import io as _io
 
 #For completion purposes, import all handlers from the request module
@@ -49,11 +58,12 @@ if "HTTPSHandler" in _request.__dict__: #HTTPS support depends on the availabili
 #For reasons of ease we also adapt the build_opener function
 build_opener            = _request.build_opener
 
+
 class FancyHTTPRedirectHandler(HTTPRedirectHandler):
     """A Handler to add the capability to follow Relative Redirects in Urllib2"""
     @staticmethod
     def relative_redirect(old, new):
-        if new.scheme !="": #An empty sheme indicates a relative redirect.
+        if new.scheme  != "": #An empty sheme indicates a relative redirect.
             return     new
         else:
             scheme     = old.scheme #use the same sheme as the request did
@@ -61,11 +71,12 @@ class FancyHTTPRedirectHandler(HTTPRedirectHandler):
             query      = new.query  #adapt the new query
             params     = new.params #adapt the new parameters
             fragment   = new.fragment #adapt the new fragments
-            if new.path[0]=="/":    #semi-relative redirects just use the old sheme&netloc
+            if new.path[0] == "/":    #semi-relative redirects just use the old sheme&netloc
                 path   = new.path   #so adapt new path from site-root
             else:                   #real relative redirects specify a location relative to the current path
                 path   = _posixpath.join(_posixpath.dirname(old.path), new.path)
             return _parse.ParseResult(scheme, netloc, path, params, query, fragment)
+    
     def http_error_302(self, req, fp, code, msg, headers):
         # Some servers (incorrectly) return multiple Location headers
         # (so probably same goes for URI).  Use first header.
@@ -132,6 +143,7 @@ if HAS_GZIP:
         def http_request(self, req):                            #When sending a request,
             req.add_header("Accept-Encoding", "deflate, gzip")  #tell the server that we understand gzip
             return req
+        
         def http_response(self, req, resp):                     #When we get our response
             if resp.headers.get("content-encoding") == "gzip":  #Check the content-encoding header
                 gz = _gzip.GzipFile(                            #Create a GZipFile object
@@ -146,5 +158,6 @@ if HAS_GZIP:
                 resp.modified = True                            #and that this isn't the original response
                 resp.original = old_resp                        #append the original response
             return resp
+        
         https_request = http_request                            #do the same for https requests
         https_response = http_response                          #do the same for https responses, too

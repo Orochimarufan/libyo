@@ -1,15 +1,27 @@
 """
-@author Orochimarufan
-@module libyo.xspf.XspfUtils
-@created 2011-12-12
-@modified 2012-05-04
+----------------------------------------------------------------------
+- xspf.XspfUtils: utilities for use in the Xspf* Classes
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
 """
-
 from __future__ import absolute_import, unicode_literals, division
 
-from .. import compat
 from ..compat import etree as ElementTree
-str = compat.getModule("util").unistr #@ReservedAssignment
 import re
 import datetime
 
@@ -17,60 +29,68 @@ import logging
 from ..extern.UriRegex import HAS_REGEX as HAS_URI_REGEX
 if not HAS_URI_REGEX:
     logging.getLogger("libyo.xspf.XspfUtils").warning("Cannot use UriRegex class. Elements that must be URIs will not be checked for Validity!")
-    def _isUri(*args,**kwds):
+    
+    def _isUri(*args, **kwds):
         return True
 else:
     from ..extern.UriRegex import UriRegex as _UriRegex
     _isUri = _UriRegex.getInstance().isUri
 
+
 class XspfUtils(object):
-    REG_DATETIME=re.compile("^\-?(?P<year>[0-9]{4,5})\-(?P<month>[0-1][0-9])\-(?P<day>[0-3][0-9])T(?P<hour>[0-2][0-9])\:(?P<minute>[0-5][0-9])\:(?P<second>[0-5][0-9])(?:\.(?P<fractional>[0-9]{2,8}))?(?P<zone>(?:[\+\-][0-1][0-9]\:[0-5][0-9])|Z)?$")
-    REG_TIMEZONE=re.compile("(?:[\+\-](?P<hours>[0-1][0-9])\:(?P<minutes>[0-5][0-9]))|(?P<Z>Z)")
-    XMLNS=None
+    REG_DATETIME = re.compile("^\-?(?P<year>[0-9]{4,5})\-(?P<month>[0-1][0-9])\-(?P<day>[0-3][0-9])T(?P<hour>[0-2][0-9])\:(?P<minute>[0-5][0-9])\:(?P<second>[0-5][0-9])(?:\.(?P<fractional>[0-9]{2,8}))?(?P<zone>(?:[\+\-][0-1][0-9]\:[0-5][0-9])|Z)?$")
+    REG_TIMEZONE = re.compile("(?:[\+\-](?P<hours>[0-1][0-9])\:(?P<minutes>[0-5][0-9]))|(?P<Z>Z)")
+    XMLNS = None
+    
     #To overcome the find problem
     @classmethod
-    def makeTagName(cls,tag):
+    def makeTagName(cls, tag):
         from .XspfObject import XspfObject
-        cls.XMLNS=XspfObject.xmlns
-        def makeTagName(cls,tag):
-            return "{{{0}}}{1}".format(cls.XMLNS,tag)
-        cls.makeTagName=makeTagName.__get__(cls)
-        return "{{{0}}}{1}".format(cls.XMLNS,tag)
+        cls.XMLNS = XspfObject.xmlns
+        
+        def makeTagName(cls, tag):
+            return "{{{0}}}{1}".format(cls.XMLNS, tag)
+        cls.makeTagName = makeTagName.__get__(cls)
+        return "{{{0}}}{1}".format(cls.XMLNS, tag)
+    
     @classmethod
-    def find(cls,node,tag):
+    def find(cls, node, tag):
         return node.find(cls.makeTagName(tag))
     
     #Low-Level XML Hooks
     @classmethod
-    def appendTextElement(cls,node,tag,text):
+    def appendTextElement(cls, node, tag, text):
         if text is None:
             return
-        element     = ElementTree.Element(cls.makeTagName(tag)) #@UndefinedVariable
-        element.text= str(text)
+        element = ElementTree.Element(cls.makeTagName(tag)) #@UndefinedVariable
+        element.text = str(text)
         node.append(element)
         return element
+    
     @classmethod
-    def hasTag(cls,node,tag):
+    def hasTag(cls, node, tag):
         return node.find(cls.makeTagName(tag)) is not None
+    
     @classmethod
-    def setElementText(cls,node,tag,text):
+    def setElementText(cls, node, tag, text):
         e = node.find(cls.makeTagName(tag))
-        e.text=text
+        e.text = text
         return e
     
     #High-Level XML Hooks
     @classmethod
-    def setOrCreateElementText(cls,node,tag,text):
-        if not XspfUtils.hasTag(node,tag):
+    def setOrCreateElementText(cls, node, tag, text):
+        if not XspfUtils.hasTag(node, tag):
             return XspfUtils.appendTextElement(node, tag, text)
         else:
             return XspfUtils.setElementText(node, tag, text)
+    
     @classmethod
-    def getElementText(cls,node,tag):
+    def getElementText(cls, node, tag):
         if not cls.hasTag(node, tag):
             return None
         else:
-            return cls.find(node,tag).text
+            return cls.find(node, tag).text
     
     #DateTime handlers
     @staticmethod
@@ -79,10 +99,10 @@ class XspfUtils(object):
         if not x:
             return False
         try:
-            datetime.datetime(2000,int(x.group("month")),
+            datetime.datetime(2000, int(x.group("month")),
                               #Year does not get checked, because the xsd:dateTime spec does not have the limitations that python's datetime has.
-                              int(x.group("day")),int(x.group("hour")),
-                              int(x.group("minute")),int(x.group("second")))
+                              int(x.group("day")), int(x.group("hour")),
+                              int(x.group("minute")), int(x.group("second")))
         except ValueError:
             return False
         if "zone" in x.groupdict():
@@ -93,39 +113,43 @@ class XspfUtils(object):
                 y = True
                 y = y and int(z.group("hours")) in range(15)
                 y = y and int(z.group("minutes")) in range(60)
-                y = y and (int(z.group("hours")) < 14 or z.group("minutes")=="00")
+                y = y and (int(z.group("hours")) < 14 or z.group("minutes") == "00")
                 if not y:
                     return False
         return True
+    
     @staticmethod
     def isoToDateTime(string):
         #wont check for validity, will only generate naive dateTime object (ignoring TZ info of the string)
         x = XspfUtils.REG_DATETIME.match(string)
-        return datetime.datetime(int(x.group("year")),int(x.group("month")),
-                                 int(x.group("day")),int(x.group("hour")),
-                                 int(x.group("minute")),int(x.group("second")))
+        return datetime.datetime(int(x.group("year")), int(x.group("month")),
+                                 int(x.group("day")), int(x.group("hour")),
+                                 int(x.group("minute")), int(x.group("second")))
     
     #Hook Generators
     @staticmethod
-    def getElementTextHook(node,tag):
+    def getElementTextHook(node, tag):
         def f():
-            return XspfUtils.getElementText(node,tag)
+            return XspfUtils.getElementText(node, tag)
         return f
+    
     @staticmethod
-    def setOrCreateElementTextHook(node,tag):
+    def setOrCreateElementTextHook(node, tag):
         def f(text):
             return XspfUtils.setOrCreateElementText(node, tag, text)
         return f
+    
     @staticmethod
-    def setOrCreateElementTextHook2(node,tag):
+    def setOrCreateElementTextHook2(node, tag):
         def f(text):
             XspfUtils.setOrCreateElementText(node, tag, text)
         return f
+    
     @staticmethod
     def checkedSetOrCreateElementTextHook2(node, tag, checker):
         def f(text):
             if checker(text):
                 XspfUtils.setOrCreateElementText(node, tag, text)
             else:
-                raise ValueError("Value has to return True in: {0}\nDescription:\n{1}".format(repr(checker),checker.__doc__))
+                raise ValueError("Value has to return True in: {0}\nDescription:\n{1}".format(repr(checker), checker.__doc__))
         return f

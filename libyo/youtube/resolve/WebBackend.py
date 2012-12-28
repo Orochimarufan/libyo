@@ -1,52 +1,49 @@
-'''
-Created on 01.02.2012
-
-@author: hinata
-'''
-
+"""
+----------------------------------------------------------------------
+- youtube.resolve.WebBackend: parse the watch page and extract info
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
+"""
 from __future__ import absolute_import, unicode_literals, division
 
-from ...util.util import sdict_parser, unicode_unescape
+from ...compat.uni import unicode_unescape
+from ...util.util import sdict_parser
 from ..exception import BackendFailedException
 import logging
 logger  = logging.getLogger("libyo.youtube.resolve.WebBackend")
-import libyo.urllib as urllib
+from ... import urllib
 
-try:
-    from ...compat import htmlparser
-except ImportError:
-    logger.warn("No HtmlParser Avaiable! WebBackend will not work!")
-else:
-    if htmlparser.IMPL!="lxml": #@UndefinedVariable
-        logger.warn("LXML not avaiable. Please Install it from http://lxml.de for full functionality and performance!")
+from ...compat import htmlparser
+if htmlparser.IMPL != "lxml": #@UndefinedVariable
+    logger.warn("LXML not avaiable. Please Install it from http://lxml.de for full functionality and performance!")
 from .AbstractBackend import AbstractBackend
 
 
 class WebBackend(AbstractBackend):
-    FakeAgent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.4 (KHTML, like Gecko) Chrome/22.0.1229.79 Safari/537.4"
-    base_url="http://www.youtube.com/watch?v="
+    FakeAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.4 (KHTML, like Gecko) Chrome/22.0.1229.79 Safari/537.4"
+    base_url = "http://www.youtube.com/watch?v="
     
-    def _fetch_old(self):
-        url = "".join((self.base_url, str(self.video_id)))
-        self.hook = urllib.request.urlopen(url)
-    
-    def _fetch(self):
+    def open_page(self):
         url = "".join((self.base_url, str(self.video_id)))
         r = urllib.request.Request(url)
         r.add_header("UserAgent", self.FakeAgent)
         r.add_header("Referer", "http://www.youtube.com")
         self.hook = urllib.request.urlopen(r)
-    
-    def _resolve(self):
-        try:
-            self._fetch()
-        except (urllib.error.URLError, urllib.error.HTTPError) as e:
-            logger.warn("Connection Error: " + str(e));
-            return False
-        if "htmlparser" in globals():
-            return self._lxml()
-        else:
-            return self._re()
     
     @staticmethod
     def fvars_parser(fvars):
@@ -64,36 +61,42 @@ class WebBackend(AbstractBackend):
                                     ) for i in map6
                                    ])
         return main
-    
-    #RE Part
-    def _re(self):
-        raise BackendFailedException()
-    
-    #LXML part
-    def _lxml_data(self):
+
+    def unpack_data(self):
         try:
-            div  = self.document.get_element_by_id("watch-video")
-            scr  = div[2].text_content()
-            ibgn = scr.index(" = \"") + 4
-            iend = scr.index("\\n\";\n")
-            strn = unicode_unescape(scr[ibgn:iend].strip())
-            doc  = htmlparser.fragment_fromstring(strn)
+            #before update, id was "watch-video".
+            div = self.document.get_element_by_id("watch7-video")
+            src = div[2].text
+            ibgn = src.index(" = \"") + 4
+            iend = src.index("\\n\";\n", ibgn)
+            strn = unicode_unescape(src[ibgn:iend].strip())
+            doc = htmlparser.fragment_fromstring(strn)
             fvars = doc.get("flashvars")
         except (IndexError, KeyError):
-            raise BackendFailedException()
+            raise BackendFailedException("could not fetch flashvars")
         return self.fvars_parser(fvars)
     
-    def _lxml_meta(self):
+    def unpack_meta(self):
         ext = {}
-        ext["title"] = self.document.get_element_by_id("eow-title").get("title")
+# before Update
+        #ext["title"] = self.document.get_element_by_id("eow-title").get("title")
+        #ext["description"] = self.document.get_element_by_id("eow-description").text
+        #ext["uploader"] = self.document.find_class("author")[0].text
+# after Update
+        ext["title"] = self.document.get_element_by_id("watch-headline-title")[0].get("title")
         ext["description"] = self.document.get_element_by_id("eow-description").text
-        ext["uploader"] = self.document.find_class("author")[0].text
+        ext["uploader"] = self.document.get_element_by_id("watch7-user-header")[1].text
         return ext
     
-    def _lxml(self):
+    def _resolve(self):
+        try:
+            self.open_page()
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
+            raise BackendFailedException(e)
         self.lxml = htmlparser.parse(self.hook)
         self.document = self.lxml.getroot()
         self.hook.close()
-        data = self._lxml_data()
-        data.update(self._lxml_meta())
+        data = self.unpack_data()
+        data.update(self.unpack_meta())
         return data
+

@@ -1,71 +1,90 @@
 """
-@author Orochimarufan
-@module libyo.xspf.XspfObject
-@created 2011-12-12
-@modified 2012-05-04
+----------------------------------------------------------------------
+- xspf.XspfObject: Object describing a XSPF playlist
+----------------------------------------------------------------------
+- Copyright (C) 2011-2012  Orochimarufan
+-                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+-
+- This program is free software: you can redistribute it and/or modify
+- it under the terms of the GNU General Public License as published by
+- the Free Software Foundation, either version 3 of the License, or
+- (at your option) any later version.
+-
+- This program is distributed in the hope that it will be useful,
+- but WITHOUT ANY WARRANTY; without even the implied warranty of
+- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- GNU General Public License for more details.
+-
+- You should have received a copy of the GNU General Public License
+- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------
 """
-
 from __future__ import absolute_import, unicode_literals, division
 
-import logging
 from ..compat import etree as ElementTree
-from .XspfUtils import XspfUtils,_isUri
+from .XspfUtils import XspfUtils, _isUri
 from .XspfTrackList import XspfTrackList
 from .XspfTrack import XspfTrack
 import datetime
 from copy import copy
 from ..util.File import File
 
+
 class XspfObject(object):
-    xmlns="http://xspf.org/ns/0/"
-    xml  = None
+    xmlns = "http://xspf.org/ns/0/"
+    xml = None
 
     @classmethod
-    def new(klass,sTitle=None,sCreator=None):
+    def new(klass, sTitle=None, sCreator=None):
         self = klass()
         self.setTitle(sTitle)
         self.setCreator(sCreator)
         return self
+    
     @classmethod
-    def fromFile(klass,fp):
-        fp = File(fp);
-        re=klass.fromETree(ElementTree.parse(fp.fp)); #@UndefinedVariable
-        fp.done();
-        return re;
+    def fromFile(klass, fp):
+        fp = File(fp)
+        re = klass.fromETree(ElementTree.parse(fp.fp)) #@UndefinedVariable
+        fp.done()
+        return re
+    
     @classmethod
     def fromETree(klass, etree):
         return klass.fromXml(etree.getroot())
+    
     @classmethod
     def fromXml(klass, elem):
-        tracks = XspfUtils.find(elem,"trackList")
+        tracks = XspfUtils.find(elem, "trackList")
         trackList = XspfTrackList()
         for track in tracks:
             trackList.append(XspfTrack(track))
         del elem[elem.index(tracks)]
-        self = klass(etree=elem,trackList=trackList)
+        self = klass(etree=elem, trackList=trackList)
         return self
-    def __init__(self,etree=None,trackList=None):
+    
+    def __init__(self, etree=None, trackList=None):
         if etree is None:
-            self.xml   = ElementTree.Element("playlist",version="1",nsmap={None:self.xmlns}) #@UndefinedVariable
+            self.xml   = ElementTree.Element("playlist", version="1", nsmap={None: self.xmlns}) #@UndefinedVariable
         elif etree.__class__ is ElementTree._Element: #@UndefinedVariable
             self.xml    = etree
         elif etree.__class__ is ElementTree._ElementTree: #@UndefinedVariable
             self.xml    = etree.getroot()
-        self.setTitle=XspfUtils.setOrCreateElementTextHook2(self.xml, "title")
-        self.getTitle=XspfUtils.getElementTextHook(self.xml, "title")
-        self.setCreator=XspfUtils.setOrCreateElementTextHook2(self.xml, "creator")
-        self.getCreator=XspfUtils.getElementTextHook(self.xml, "creator")
-        self.setAnnotation=XspfUtils.setOrCreateElementTextHook2(self.xml, "annotation")
-        self.getAnnotation=XspfUtils.getElementTextHook(self.xml, "annotation")
-        self.setInfo=XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "info", _isUri)
-        self.getInfo=XspfUtils.getElementTextHook(self.xml, "info")
-        self.setLocation=XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "location", _isUri)
-        self.getLocation=XspfUtils.getElementTextHook(self.xml, "location")
-        self.setIdentifier=XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "identifier", _isUri)
-        self.getIdentifier=XspfUtils.getElementTextHook(self.xml, "identifier")
-        self.setImage=XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "image", _isUri)
-        self.getImage=XspfUtils.getElementTextHook(self.xml, "image")
-        def setDate(self,date):
+        self.setTitle = XspfUtils.setOrCreateElementTextHook2(self.xml, "title")
+        self.getTitle = XspfUtils.getElementTextHook(self.xml, "title")
+        self.setCreator = XspfUtils.setOrCreateElementTextHook2(self.xml, "creator")
+        self.getCreator = XspfUtils.getElementTextHook(self.xml, "creator")
+        self.setAnnotation = XspfUtils.setOrCreateElementTextHook2(self.xml, "annotation")
+        self.getAnnotation = XspfUtils.getElementTextHook(self.xml, "annotation")
+        self.setInfo = XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "info", _isUri)
+        self.getInfo = XspfUtils.getElementTextHook(self.xml, "info")
+        self.setLocation = XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "location", _isUri)
+        self.getLocation = XspfUtils.getElementTextHook(self.xml, "location")
+        self.setIdentifier = XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "identifier", _isUri)
+        self.getIdentifier = XspfUtils.getElementTextHook(self.xml, "identifier")
+        self.setImage = XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "image", _isUri)
+        self.getImage = XspfUtils.getElementTextHook(self.xml, "image")
+        
+        def setDate(self, date):
             if date.__class__ is datetime.datetime:
                 date    = date.isoformat()
             if date.__class__ is "".__class__:
@@ -74,15 +93,17 @@ class XspfObject(object):
             else:
                 raise ValueError("'date' needs to be of Type datetime.datetime or String")
             XspfUtils.setOrCreateElementText(self.xml, "date", date)
+        
         def getDate(self, asDatetime=False):
             if asDatetime:
                 return XspfUtils.isoToDateTime(XspfUtils.getElementText(self.xml, "date"))
             else:
                 return XspfUtils.getElementText(self.xml, "date")
+        
         self.setDate = setDate.__get__(self)
         self.getDate = getDate.__get__(self)
-        self.setLicense=XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "license", _isUri)
-        self.getLicense=XspfUtils.getElementTextHook(self.xml, "license")
+        self.setLicense = XspfUtils.checkedSetOrCreateElementTextHook2(self.xml, "license", _isUri)
+        self.getLicense = XspfUtils.getElementTextHook(self.xml, "license")
         #TODO: xml.playlist.attribution element (spec 4.1.1.2.10)
         #TODO: xml.playlist.link elements (spec 4.1.1.2.11)
         #TODO: xml.playlist.meta elements (spec 4.1.1.2.12)
@@ -92,32 +113,40 @@ class XspfObject(object):
         else:
             self.trackList = trackList
     
-    def addTrack(self,xspfTrack):
+    def addTrack(self, xspfTrack):
         if xspfTrack.__class__ is not XspfTrack:
             raise ValueError("'xspfTrack' must be of type XspfTrack. create one by calling XspfObject.newTrack()")
         self.trackList.append(xspfTrack)
-    def getTrack(self,index):
+    
+    def getTrack(self, index):
         return self.trackList[index]
-    def popTrack(self,index):
+    
+    def popTrack(self, index):
         return self.trackList.pop(index)
+    
     def delTrack(self, xspfTrack):
         self.trackList.remove(xspfTrack)
-    def newTrack(self,sTitle=None,sCreator=None,sLocation=None):
-        return XspfTrack.new(sTitle,sCreator,sLocation)
     
-    def toString(self,pretty_print=True,xml_declaration=False,encoding="utf8"):
-        return ElementTree.tostring(self.toXml(),xml_declaration=xml_declaration,encoding=encoding,pretty_print=pretty_print) #@UndefinedVariable
+    def newTrack(self, sTitle=None, sCreator=None, sLocation=None):
+        return XspfTrack.new(sTitle, sCreator, sLocation)
+    
+    def toString(self, pretty_print=True, xml_declaration=False, encoding="utf8"):
+        return ElementTree.tostring(self.toXml(), xml_declaration=xml_declaration, encoding=encoding, pretty_print=pretty_print) #@UndefinedVariable
+    
     def toXml(self):
         xml = copy(self.xml)
         xml.append(self.trackList.toXml())
         return xml
+    
     def toETree(self):
         return ElementTree.ElementTree(self.toXml()) #@UndefinedVariable
+    
     def toFile(self, fp, encoding="utf8", method="xml", pretty_print=True, xml_declaration=True):
-        fp = File(fp,"wb");
-        self.toETree().write(fp.fp,encoding,method,pretty_print,xml_declaration);
-        fp.done();
+        fp = File(fp, "wb")
+        self.toETree().write(fp.fp, encoding, method, pretty_print, xml_declaration)
+        fp.done()
+    
     def toFile_c14n(self, fp):
-        fp = File(fp,"wb");
-        self.toETree().write_c14n(fp.fp);
-        fp.done();
+        fp = File(fp, "wb")
+        self.toETree().write_c14n(fp.fp)
+        fp.done()
