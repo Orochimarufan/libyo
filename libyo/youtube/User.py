@@ -69,3 +69,6 @@ class User(object):
     
     def profile(self):
         return self._gdata("")
+    
+    def newsubvideos(self):
+        return self._gdata("newsubscriptionvideos")

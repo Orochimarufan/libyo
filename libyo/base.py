@@ -22,5 +22,7 @@
 from __future__ import absolute_import, unicode_literals
 
 
-class LibYoException(Exception):
+class LibyoError(Exception):
     pass
+
+LibYoException = LibyoError

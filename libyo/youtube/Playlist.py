@@ -24,7 +24,7 @@ from __future__ import absolute_import, unicode_literals, division
 from .gdata import gdata, html_decode
 import logging
 from ..compat import htmlparser
-from .. import urllib
+from ..urllib import request
 
 HAS_HTML = False # design changed
 
@@ -64,7 +64,7 @@ class Playlist(object):
         return skel
     if HAS_HTML:
         def noapi(self):
-            page = urllib.request.urlopen("http://youtube.com/playlist?list="+self.playlist_id)
+            page = request.urlopen("http://youtube.com/playlist?list="+self.playlist_id)
             layout = {"data":
                     {"description": "",
                      "title": None,

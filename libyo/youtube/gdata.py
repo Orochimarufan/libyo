@@ -24,8 +24,11 @@ from __future__ import absolute_import, unicode_literals, division
 import json
 import re
 
-from .. import urllib
 from ..compat import html, uni
+from ..urllib import parse
+from ..urllib import request
+
+from . import auth
 
 
 def decode(byte):
@@ -42,7 +45,7 @@ def decode(byte):
 
 def get_json(url):
     """Retreives JSON URI and turns into Python Object"""
-    return json.loads(decode(urllib.request.urlopen(url).read()))
+    return json.loads(decode(auth.urlopen(url).read()))
 
 
 def gdata(module, parameters=None, ssl=True):
@@ -54,10 +57,10 @@ def gdata(module, parameters=None, ssl=True):
     
     base    = "{scheme}://gdata.youtube.com/feeds/api/{module}?{parameters}"
     scheme  = "https" if ssl else "http"
-    params  = urllib.parse.urlencode(parameters)
+    params  = parse.urlencode(parameters)
     url     = base.format(scheme=scheme, module=module, parameters=params)
     
-    request = urllib.request.Request(url)
+    request = request.Request(url)
     request.add_header("GData-Version", "2.0")
     
     return get_json(request)

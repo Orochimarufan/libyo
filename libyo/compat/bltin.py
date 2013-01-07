@@ -67,3 +67,15 @@ if PY3:
     input = input
 else:
     input = raw_input
+
+# exec_ acts like the python3 exec() function
+try:
+    exec_ = eval('exec')
+except SyntaxError:
+    def exec_(co, globals=None, locals=None):
+        if globals is None:
+            exec (co)
+        elif locals is None:
+            exec (co, globals)
+        else:
+            exec (co, globals, locals)
