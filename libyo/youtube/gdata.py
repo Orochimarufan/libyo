@@ -64,7 +64,7 @@ def gdata(module, parameters=None, ssl=True):
         parameters.extend(d.items())
     params  = parse.urlencode(parameters)
     url     = base.format(scheme=scheme, module=module, parameters=params)
-    print(url)
+    #print(url)
     
     r = request.Request(url)
     r.add_header("GData-Version", "2.0")
