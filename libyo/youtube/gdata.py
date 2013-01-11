@@ -27,6 +27,7 @@ import re
 from ..compat import html, uni
 from ..urllib import parse
 from ..urllib import request
+from ..util.util import sdict_parser
 
 from . import auth
 
@@ -57,13 +58,18 @@ def gdata(module, parameters=None, ssl=True):
     
     base    = "{scheme}://gdata.youtube.com/feeds/api/{module}?{parameters}"
     scheme  = "https" if ssl else "http"
+    if "?" in module:
+        module, s = module.split("?", 1)
+        d = sdict_parser(s)
+        parameters.extend(d.items())
     params  = parse.urlencode(parameters)
     url     = base.format(scheme=scheme, module=module, parameters=params)
+    print(url)
     
-    request = request.Request(url)
-    request.add_header("GData-Version", "2.0")
+    r = request.Request(url)
+    r.add_header("GData-Version", "2.0")
     
-    return get_json(request)
+    return get_json(r)
 
 
 def html_entity(entity):

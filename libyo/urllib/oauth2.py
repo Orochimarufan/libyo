@@ -72,7 +72,7 @@ class UrllibRequester(object):
         if method == 'POST' and data is None:
             data = b""
         r = request.Request(url, data, headers)
-        fp = self.opener(r)
+        fp = self.opener.open(r)
         content = fp.read()
         fp.close()
         return fp.getcode(), fp.headers, content
@@ -284,7 +284,7 @@ class Flow(object):
         query.update(self.params)
         parts = list(parse.urlparse(self.auth_uri))
         query.update(dict(parse.parse_qsl(parts[4])))
-        parts[4] = parse.urlencode(query)
+        parts[4] = parse.urlencode(query, safe=":/")
         return parse.urlunparse(parts)
     
     def getTokens(self, code, request_handler=urllibRequester):
@@ -401,6 +401,7 @@ class OAuthHandler(request.BaseHandler):
         *creds* is a valid :class:`Credentials` instance
         """
         self.creds = creds
+        self.refreshing = False
     
     def http_request(self, req):
         #if self.creds.scope is not None:
@@ -411,12 +412,28 @@ class OAuthHandler(request.BaseHandler):
         #    if netloc1 == netloc2 and path1 == path2:
         #        return req
         
-        req.add_header(*self.creds.getAuthHeader())
+        if not self.refreshing:
+            req.add_header(*self.creds.getAuthHeader())
+        
         return req
     
     def http_error_401(self, req, fp, code, msg, headers):
+        if hasattr(req, "oauth_retries"):
+            if req.oauth_retries > 5:
+                logger.info(self.creds)
+                logger.info(req.headers)
+                return
+            req.oauth_retries += 1
+        else:
+            req.oauth_retries = 1
         logger.getChild("OAuthHandler").info("HTTP 401: auto-refreshing token")
+        
+        self.refreshing = True
         
         self.creds.refresh(UrllibRequester(self.parent))
         
+        self.refreshing = False
+        
         return self.parent.open(req)
+    
+    https_request = http_request

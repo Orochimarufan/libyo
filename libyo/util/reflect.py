@@ -129,9 +129,8 @@ class DescriptorObject(object):
 # Various Data Descriptors
 #------------------------------------------------------------------------------
 # NOTE:
-#    To use InstanceMethods in TypeTriggerVar*s, you need to inherit
-#        DescriptorObject and move the Descriptor definitions into the
-#        Constructor.
+#    These Descriptors share the value per-descriptor (like class-vars)
+#       you probably want to use it on a per-instance basis (inside constructor)
 #------------------------------------------------------------------------------
 class DataDescriptor(object):
     def __init__(self, value=None):
@@ -181,17 +180,35 @@ class TypeTriggerVar2(TypeTriggerVar):
         self.trigger(self.value)
 
 
-class AliasVar(DataDescriptor):
-    def __init__(self, name):
-        self.name = name
-    
-    def __get__(self, obj, objtype=None):
-        if obj is None and objtype is not None:
-            return type.__getattribute__(objtype, self.name)
-        return obj.__getattribute__(self.name)
+#------------------------------------------------------------------------------
+# new-style Data Descriptors
+#------------------------------------------------------------------------------
+# maps instances to values, only one instance on the
+#------------------------------------------------------------------------------
+class DataDescriptor2(DataDescriptor):
+    def __init__(self, value=None):
+        super(DataDescriptor2, self).__init__(value)
+        self.values = weakref.WeakKeyDictionary()
     
     def __set__(self, obj, value):
-        return obj.__setattr__(self.name, value)
+        self.values[obj] = value
+    
+    def __get__(self, obj, objtype=None):
+        if obj in self.values:
+            return self.values[obj]
+        elif objtype and objtype in self.values:
+            return self.values[objtype]
+        else:
+            return self.value
+
+
+class SetterVar(DataDescriptor2):
+    def __init__(self, f):
+        super(SetterVar, self).__init__()
+        self.setter = f
+    
+    def __set__(self, obj, value):
+        super(SetterVar, self).__set__(self.setter(obj, value))
 
 
 #------------------------------------------------------------------------------
@@ -209,3 +226,23 @@ def getterFunc(instance, varname):
     def getter(self):
         getattr(self, varname)
     return getter.__get__(instance)
+
+
+#------------------------------------------------------------------------------
+# Alias Var
+#------------------------------------------------------------------------------
+# A data descriptor that redirects access to another attribute
+#------------------------------------------------------------------------------
+class AliasVar(object):
+    __slots__ = ("name",)
+    
+    def __init__(self, name):
+        self.name = name
+    
+    def __get__(self, obj, objtype=None):
+        if obj is None and objtype is not None:
+            return type.__getattribute__(objtype, self.name)
+        return obj.__getattribute__(self.name)
+    
+    def __set__(self, obj, value):
+        return obj.__setattr__(self.name, value)

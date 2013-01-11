@@ -53,7 +53,7 @@ def sdict_parser(string, kvdelim="=", delim="&", unq=1):
         string: the string to parse
         kvdelim: the key/value delimiter (default="=")
         delim: the pair delimiter (default="&")
-        unq: UrlUnquote values: 0=No 2=Yes 3=Plus"""
+        unq: UrlUnquote values: 0=No 2=Yes 1=Plus"""
     return dict([getkv(i, kvdelim, unq) for i in string.split(delim)])
 
 
