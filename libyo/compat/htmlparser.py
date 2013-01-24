@@ -21,9 +21,9 @@
 """
 from __future__ import absolute_import, unicode_literals
 
-from .features.feature import CompatibilityFeature
+from .feature import feature
 
-CompatibilityFeature("htmlparser", [
+feature("htmlparser", [
                       ("lxml", "lxml.html"),
                       ("fallback", ".htmlparser")
                      ])

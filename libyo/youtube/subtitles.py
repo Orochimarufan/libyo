@@ -21,20 +21,12 @@
 """
 from __future__ import absolute_import, unicode_literals, division
 
-try:
-    from lxml import etree as etree
-except ImportError:
-    try:
-        from xml.etree import cElementTree as etree
-    except ImportError:
-        from xml.etree import ElementTree as etree
-
-from ..compat import getModule as _gm
-urlopen = _gm("urllib.request").urlopen
-entities = _gm("html").entities
 from ..compat.uni import unichr
 import math
 import re
+from ..urllib.request import urlopen
+from ..compat import etree
+from ..compat.html import entities
 
 html_refex = re.compile(r'&(?:(#)(\d+)|([^;]+));')
 

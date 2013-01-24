@@ -1,0 +1,16 @@
+the libyo python library
+
+features:
+* urllib extensions
+* python2.x compatibility code
+* youtube api v2 & videos
+* configparser extensions
+* file magic ctypes wrapper
+* iso 8601 date/time/datetime parsing
+* terminal progress bars
+* pure-python lxml.etree-like html parser
+* misc tools and utilities
+
+(c) 2010-2013 Orochimarufan
+
+Licensed under GNU GPL v3+

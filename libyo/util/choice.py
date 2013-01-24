@@ -74,3 +74,4 @@ class qchoice(cichoice):
 class switchchoice(list):
     def __contains__(self, other):
         return not [c for c in other if not list.__contains__(self, c)]
+

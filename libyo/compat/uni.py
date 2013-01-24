@@ -38,8 +38,8 @@ if PY3: # Python 3.x
             return s
         return str(s, "UTF-8")
 
-    chr = chr
-    unichr = chr
+    chr = chr #@ReservedAssignment
+    unichr = chr #@ReservedAssignment
     unistr = str
     encstr = bytes
 
@@ -69,13 +69,17 @@ else: # Python 2.x
     text_type = unicode
 
     def b(s):
-        return s
+        if (isinstance(s, bytes)):
+            return s
+        return bytes(s, "UTF-8")
     
     def u(s):
-        return unicode(s, "unicode_escape")
+        if (isinstance(s, unicode)):
+            return s
+        return unicode(s, "UTF-8")
 
-    chr = unichr
-    unichr = unichr
+    chr = unichr #@ReservedAssignment
+    unichr = unichr #@ReservedAssignment
     unistr = unicode
     encstr = bytes
 

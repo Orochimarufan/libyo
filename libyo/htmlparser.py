@@ -1,6 +1,6 @@
 """
 ----------------------------------------------------------------------
-- compat.features.htmlparser: Simple HTML Parser Implementation
+- htmlparser: Simple HTML Parser Implementation
 ----------------------------------------------------------------------
 - Copyright (C) 2011-2012  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
@@ -22,12 +22,12 @@
 
 from __future__ import absolute_import, unicode_literals, division
 
-from .. import PY3
-from ..uni import unichr
+from .compat import PY3
+from .compat.uni import unichr
 
 from collections import deque
 
-from ..html import entities, parser
+from .compat.html import entities, parser
 
 
 class Document(object):

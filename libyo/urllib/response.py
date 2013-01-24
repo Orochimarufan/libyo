@@ -2,7 +2,7 @@
 ----------------------------------------------------------------------
 - urllib.response: urllib.response proxy
 ----------------------------------------------------------------------
-- Copyright (C) 2011-2012  Orochimarufan
+- Copyright (C) 2011-2013  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
 -
 - This program is free software: you can redistribute it and/or modify
@@ -22,9 +22,34 @@
 from __future__ import absolute_import, unicode_literals
 
 from ..compat import PY3
+
 if (PY3):
     from urllib.response import *
-    from urllib.response import __file__, __doc__
+    from urllib.response import __file__, __doc__ #@UnresolvedImport @UnusedImport
+
 else:
-    from ..compat.python2.urllib.response import *
-    from ..compat.python2.urllib.response import __file__, __doc__
+    import urllib as _urllib
+    
+    #########################################################################
+    # urllib.response                                                       #
+    #########################################################################
+    # Python 2.x doen't implement the context protocol on addbase.          #
+    #########################################################################
+    
+    def _addbase__enter__(self):
+        if self.fp is None:
+            raise ValueError("I/O Operation on closed file")
+        return self
+    
+    def _addbase__exit__(self, etype, value, tb):
+        self.close()
+    
+    addbase             = _urllib.addbase
+    addbase.__enter__   = _addbase__enter__
+    addbase.__exit__    = _addbase__exit__
+    
+    addclosehook    = _urllib.addclosehook
+    addinfo         = _urllib.addclosehook
+    addinfourl      = _urllib.addinfourl
+    
+    __all__ = [i for i in globals().keys() if (i[0] != "_")]

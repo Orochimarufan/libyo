@@ -2,7 +2,7 @@
 ----------------------------------------------------------------------
 - libyo: Orochimarufan's shared code library
 ----------------------------------------------------------------------
-- Copyright (C) 2011-2012  Orochimarufan
+- Copyright (C) 2011-2013  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
 -
 - This program is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@ Features:
     libyo.argparse - StdPy ArgumentParser extension
     libyo.interface - user interface code
     libyo.extern - code written by other people
-    libyo.compat - compatibility code (py 2/3)
+    libyo.compat - some compatibility code
     libyo.reflect - reflection code
     libyo.urllib - urllib(2) extensions
 """
@@ -39,8 +39,8 @@ ntup = namedtuple("version_info", "major,minor,micro,patch")
 
 # -------------------------------------------------
 # libyo version
-version_info = ntup(0, 9, 14, 0)
-version = "0.9.14"
+version_info = ntup(0, 10, 0, 0)
+version = "0.10"
 # -------------------------------------------------
 
 

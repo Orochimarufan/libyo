@@ -22,8 +22,10 @@
 from __future__ import absolute_import, unicode_literals
 
 from . import PY3
+
 if (PY3):
-    from html import entities, parser, __file__
+    from html import entities, parser, __file__ #@UnresolvedImport @UnusedImport
+
 else:
-    import HTMLParser as parser
-    import htmlentitydefs as entities
+    import HTMLParser as parser #@Reimport @UnusedImport
+    import htmlentitydefs as entities #@Reimport @UnusedImport

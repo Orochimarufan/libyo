@@ -1,8 +1,8 @@
 """
 ----------------------------------------------------------------------
-- utils.jimport: java-style import function
+- compat.feature: Feature Implementation Selection Mechanism
 ----------------------------------------------------------------------
-- Copyright (C) 2011-2012  Orochimarufan
+- Copyright (C) 2011-2013  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
 -
 - This program is free software: you can redistribute it and/or modify
@@ -19,23 +19,39 @@
 - along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ----------------------------------------------------------------------
 """
+
 from __future__ import absolute_import, unicode_literals
 
+import inspect
 import logging
 
+logger = logging.getLogger(__name__)
 
-def jimport(className, nameSpace=None):
-    a = (className, className.split(".")[-1])
-    b = "from {0} import {1}".format(*a)
-    c = {}
-    logging.getLogger(__name__).debug("'{0}'".format(className) + (" -> " + nameSpace.__name__ if nameSpace is not None else ""))
-    exec (b, c) #@UndefinedVariable
-    if nameSpace is not None:
-        import types
-        if isinstance(nameSpace, types.ModuleType):
-            nameSpace.__dict__[a[1]] = c[a[1]]
-        elif isinstance(nameSpace, type):
-            setattr(nameSpace, a[1], c[a[1]])
+
+def feature(name, IMPLS, module=__name__.rsplit(".", 1)[0]):
+    import importlib as _import
+    for n, p in IMPLS:
+        try:
+            MODULE = _import.import_module(p, module)
+        except ImportError:
+            continue
         else:
-            nameSpace[a[1]] = c[a[1]]
-    return c[a[1]]
+            IMPL = n
+            break
+    else:
+        IMPL = False
+    _set = inspect.currentframe().f_back.f_globals
+    _set["IMPL"] = IMPL
+    if not IMPL:
+        raise ImportError("Could not Import any {0} Implementation!".format(name))
+    _set["MODULE"] = MODULE
+    if hasattr(MODULE, "__all__"):
+        _iter = MODULE.__all__
+    else:
+        _iter = dir(MODULE)
+    for i in _iter:
+        _set[i] = getattr(MODULE, i)
+    del _iter
+    del _set
+
+    logger.info("{0} Implementation: {1}".format(name, IMPL))

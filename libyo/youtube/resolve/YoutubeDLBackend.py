@@ -12,7 +12,7 @@ import socket
 import sys
 import datetime
 import logging
-from ...compat.features.htmlparser import parse as parsehtm
+from ...htmlparser import parse as parsehtm
 
 
 def clean_html(html):
@@ -41,7 +41,7 @@ class YoutubeDLBackend(AbstractBackend):
             video_webpage = request.urlopen(req).read().decode("UTF-8")
         except (error.URLError, error.HTTPError, socket.error):
             err = sys.exc_info()[1]
-            self.trouble('ERROR: unable to download video webpage: %s' \
+            self.trouble('ERROR', 'unable to download video webpage: %s' \
                          % str(err))
             return
 
@@ -64,22 +64,22 @@ class YoutubeDLBackend(AbstractBackend):
                     break
             except (error.URLError, error.HTTPError, socket.error):
                 err = sys.exc_info()[1]
-                self.trouble('ERROR: unable to download video info webpage: %s'
+                self.trouble('ERROR', 'unable to download video info webpage: %s'
                             % str(err))
                 return
         
         if 'token' not in video_info:
             if 'reason' in video_info:
-                self.trouble('ERROR: YouTube said: %s'
+                self.trouble('ERROR', 'YouTube said: %s'
                              % video_info['reason'][0])
             else:
-                self.trouble('ERROR: "token" parameter not in video info for unknown reason')
+                self.trouble('ERROR', '"token" parameter not in video info for unknown reason')
             return
 
         # Check for "rental" videos
         if 'ypc_video_rental_bar_text' in video_info and \
                 'author' not in video_info:
-            self.trouble('ERROR: "rental" videos not supported')
+            self.trouble('ERROR', '"rental" videos not supported')
             return
 
         # Start extracting information
@@ -87,19 +87,19 @@ class YoutubeDLBackend(AbstractBackend):
 
         # uploader
         if 'author' not in video_info:
-            self.trouble('ERROR: unable to extract uploader nickname')
+            self.trouble('ERROR', 'unable to extract uploader nickname')
             return
         video_uploader = parse.unquote_plus(video_info['author'][0])
 
         # title
         if 'title' not in video_info:
-            self.trouble('ERROR: unable to extract video title')
+            self.trouble('ERROR', 'unable to extract video title')
             return
         video_title = parse.unquote_plus(video_info['title'][0])
 
         # thumbnail image
         if 'thumbnail_url' not in video_info:
-            self.trouble('WARNING: unable to extract video thumbnail')
+            self.trouble('WARNING', 'unable to extract video thumbnail')
             video_thumbnail = ''
         else:    # don't panic if we can't find it
             video_thumbnail = parse.unquote_plus(video_info['thumbnail_url'][0])
@@ -154,6 +154,7 @@ class YoutubeDLBackend(AbstractBackend):
                    }
         return results
     
-    def trouble(self, reason):
-        logging.getLogger("libyo.youtube.resolve.YoutubeDLBackend").error(reason)
-        raise BackendFailedException()
+    def trouble(self, level, reason):
+        logging.getLogger("libyo.youtube.resolve.YoutubeDLBackend").log(reason, level=getattr(logging, level))
+        if level == 'ERROR':
+            raise BackendFailedException()

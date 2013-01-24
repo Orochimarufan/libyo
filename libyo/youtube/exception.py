@@ -21,10 +21,10 @@
 """
 from __future__ import absolute_import, unicode_literals
 
-from ..base import LibYoException
+from ..base import LibyoError
 
 
-class YouTubeException(LibYoException):
+class YouTubeException(LibyoError):
     pass
 
 

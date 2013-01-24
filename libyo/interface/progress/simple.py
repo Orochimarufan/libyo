@@ -26,7 +26,7 @@ import math
 from .abstract import AbstractProgressObject
 from ...extern.terminal import getTerminalSize
 from ...util.pretty import fillP
-from ...util.reflect import TypeVar
+from ...util.reflect import TypeVar2
 
 
 class SimpleProgress(AbstractProgressObject):
@@ -48,9 +48,10 @@ class SimpleProgress(AbstractProgressObject):
 
 
 class SimpleProgress2(SimpleProgress):
+    unknown = TypeVar2(bool, False)
+    
     def __init__(self, stream=sys.stdout):
         super(SimpleProgress2, self).__init__(stream)
-        self.unknown = TypeVar(bool, False)
         self._r_lastpos = 0
         self._r_backwards = False
     

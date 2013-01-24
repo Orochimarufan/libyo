@@ -21,11 +21,11 @@
 """
 from __future__ import absolute_import, unicode_literals
 
-from .features.feature import CompatibilityFeature
+from .feature import feature
 
 __all__ = ["parse", "Element", "ElementTree", "_Element"]
 
-CompatibilityFeature("ElementTree", [
+feature("ElementTree", [
                      ("LXML", "lxml.etree"),
                      ("CPYTHON", "xml.etree.cElementTree"),
                      ("PUREPYTHON", "xml.etree.ElementTree"),

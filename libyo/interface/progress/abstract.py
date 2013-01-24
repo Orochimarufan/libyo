@@ -22,34 +22,22 @@
 from __future__ import absolute_import, unicode_literals
 
 from abc import abstractmethod
-from ...util.reflect import DescriptorObject, TypeTriggerVar2, TypeTriggerVar, setterFunc
+from ...util.reflect import TypeTriggerVar3, SetterDescriptor
 
 
-class AbstractProgressObject(DescriptorObject):
+class AbstractProgressObject(object):
     def __init__(self):
-        super(AbstractProgressObject, self).__init__()
         #internal
         self._active = False
         self.stopIter = False
         self._isTaskList = False
-        #descriptor vars
-        self.min = TypeTriggerVar(int, self._f_ran)
-        self.max = TypeTriggerVar(int, self._f_ran, 100)
-        self.position = TypeTriggerVar2(int, self._changed)
-        self.task = TypeTriggerVar2(str, self._task, "Processing...")
-        self.name = TypeTriggerVar2(str, self._name, "Progress")
-        #set*()
-        self.setMax = self.setMaximum = setterFunc(self, "max")
-        self.setMin = self.setMinimum = setterFunc(self, "min")
-        self.setPos = self.setPosition = \
-        self.setValue = self.setCurrent = setterFunc(self, "position")
-        self.setName = setterFunc(self, "name")
-        self.setTask = setterFunc(self, "task")
+        
+        self.task = "Processing..."
+        self.name = "Progress"
     
     def setRange(self, mini, maxi):
-        self.__getdescriptor__('min').notrigger(mini)
-        self.__getdescriptor__('max').notrigger(maxi)
-        self._f_ran()
+        type(self).min.notrigger(self, mini)
+        self.max = maxi
     
     def _f_ran(self, x=None):
         self._range(self.min, self.max)
@@ -123,6 +111,20 @@ class AbstractProgressObject(DescriptorObject):
         if self._active:
             self._redraw()
     
+    # attributes and setters
+    min = TypeTriggerVar3(int, _f_ran, 0)
+    max = TypeTriggerVar3(int, _f_ran, 100)
+    position = TypeTriggerVar3(int, _changed, 0)
+    task = TypeTriggerVar3(str, _task)
+    name = TypeTriggerVar3(str, _name)
+    
+    setMax = SetterDescriptor("max")
+    setMin = SetterDescriptor("min")
+    setPos = SetterDescriptor("position")
+    setValue = setPos
+    setName = SetterDescriptor("name")
+    setTask = SetterDescriptor("task")
+    
     #abstract methods
     @abstractmethod
     def _start(self):
@@ -135,3 +137,4 @@ class AbstractProgressObject(DescriptorObject):
     @abstractmethod
     def _redraw(self):
         raise NotImplementedError()
+

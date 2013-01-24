@@ -2,7 +2,7 @@
 ----------------------------------------------------------------------
 - compat.bltin: Builtins compatibility module
 ----------------------------------------------------------------------
-- Copyright (C) 2011-2012  Orochimarufan
+- Copyright (C) 2011-2013  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
 -
 - This program is free software: you can redistribute it and/or modify
@@ -26,14 +26,14 @@ from . import PY3
 import sys
 
 if PY3:
-    import builtins
+    import builtins #@UnresolvedImport @UnusedImport
 else:
-    import __builtin__ as builtins
+    import __builtin__ as builtins #@Reimport
 
 if sys.version_info >= (2, 6):
-    next = builtins.next
+    next = builtins.next #@ReservedAssignment
 else:
-    def next(iterator, default=None):
+    def next(iterator, default=None): #@ReservedAssignment
         try:
             return iterator.next()
         except StopIteration:
@@ -64,18 +64,18 @@ class withmetaclass(object):
         return self.metaclass(klass.__name__, klass.__bases__, dict(klass.__dict__))
 
 if PY3:
-    input = input
+    input = input #@ReservedAssignment
 else:
-    input = raw_input
+    input = raw_input #@ReservedAssignment
 
 # exec_ acts like the python3 exec() function
 try:
     exec_ = eval('exec')
 except SyntaxError:
-    def exec_(co, globals=None, locals=None):
+    def exec_(co, globals=None, locals=None): #@ReservedAssignment
         if globals is None:
-            exec (co)
+            exec (co) #@UndefinedVariable
         elif locals is None:
-            exec (co, globals)
+            exec (co, globals) #@UndefinedVariable
         else:
-            exec (co, globals, locals)
+            exec (co, globals, locals) #@UndefinedVariable

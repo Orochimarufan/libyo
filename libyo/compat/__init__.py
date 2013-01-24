@@ -2,7 +2,7 @@
 ----------------------------------------------------------------------
 - compat: Compatibility Package
 ----------------------------------------------------------------------
-- Copyright (C) 2011-2012  Orochimarufan
+- Copyright (C) 2011-2013  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
 -
 - This program is free software: you can redistribute it and/or modify
@@ -31,10 +31,3 @@ logging.getLogger(__name__).info("Running on {0} {1} {2}".format(
                                     platform.python_implementation(),
                                     ".".join(map(str, sys.version_info[:3])),
                                     sys.version_info[3]))
-
-
-def getModule(name):
-    if (PY3):
-        return importlib.import_module(name)
-    else:
-        return importlib.import_module("." + name, __name__ + ".python2")

@@ -28,7 +28,7 @@ import re
 import collections
 from ...extern.terminal import getTerminalSize
 from ...util.util import mega
-from ...util.reflect import TypeTriggerVar2
+from ...util.reflect import TypeTriggerVar3
 from .simple import SimpleProgress2
 
 tft = ["s", "min", "h"]
@@ -65,13 +65,14 @@ class SimpleFileProgress(SimpleProgress2):
                            "{total}":    0b00010000,
                            "{title}":    0b00100000,
                            "{task}":     0b01000000,
-                           "{position}": 0b10000000}
+                           "{position}": 0b10000000,
+                           "{avgspeed}": 0b100000000}
     _extVars            = re.compile("\{[^\}]*\}")
     _defaultformat      = "{position}/{total} {bar} {percent} {speed} ETA: {eta}"
     
     def __init__(self, fmt=None, base10=False, stream=sys.stdout):
         super(SimpleFileProgress, self).__init__(stream)
-        self.format = TypeTriggerVar2(str, self._newformat, fmt or self._defaultformat)
+        self.format = fmt or self._defaultformat
         self.base10 = base10
         self._iLastTime = time.time()
         self._iLastPos = 0
@@ -89,6 +90,8 @@ class SimpleFileProgress(SimpleProgress2):
             if k in fmt:
                 self._iFormatCom |= t
         self._redrawMaybe()
+    
+    format = TypeTriggerVar3(str, _newformat)
     
     def _range(self, iMin, iMax):
         """ Called when min or max get changed. """
@@ -158,7 +161,8 @@ class SimpleFileProgress(SimpleProgress2):
         #Speed and ETA
         s = self._iFormatCom & 4
         e = self._iFormatCom & 8
-        if s or e:
+        a = self._iFormatCom & 256
+        if s or e or a:
             self._doSpeedCalc()
         if s:
             sSpeed = "".join([mega(self._iSpeed, True, self.base10, ""), "/s"])
@@ -168,6 +172,9 @@ class SimpleFileProgress(SimpleProgress2):
             self._doEta()
             dFdict["eta"] = self._sEta
             iSpace -= self._iEtaLen
+        if a:
+            dFdict["avgspeed"] = "".join([mega(self._iAvgSpeed, True, self.base10, ""), "/s"])
+            iSpace -= len(dFdict["avgspeed"])
         #Bar
         if self._iFormatCom & 1:
             iTiles = iSpace - 2

@@ -27,7 +27,6 @@ import re
 from ..compat import html, uni
 from ..urllib import parse
 from ..urllib import request
-from ..util.util import sdict_parser
 
 from . import auth
 
@@ -55,13 +54,8 @@ def gdata(module, parameters=None, ssl=True):
     if parameters is None:
         parameters = list()
     parameters.append(("alt", "jsonc")) #This Whole thing does not know xml... only JSON ;)
-    
     base    = "{scheme}://gdata.youtube.com/feeds/api/{module}?{parameters}"
     scheme  = "https" if ssl else "http"
-    if "?" in module:
-        module, s = module.split("?", 1)
-        d = sdict_parser(s)
-        parameters.extend(d.items())
     params  = parse.urlencode(parameters)
     url     = base.format(scheme=scheme, module=module, parameters=params)
     #print(url)

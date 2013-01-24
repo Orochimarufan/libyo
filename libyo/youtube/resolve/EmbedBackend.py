@@ -9,11 +9,10 @@ from __future__ import absolute_import, unicode_literals, division
 from .AbstractBackend import AbstractBackend
 from .WebBackend import WebBackend
 from ..exception import BackendFailedException
-from ... import compat
+from ... import urllib
 import logging
 
 logger = logging.getLogger("libyo.youtube.resolve.EmbedBackend")
-urllib = compat.getModule("urllib")
 
 
 class EmbedBackend(AbstractBackend):

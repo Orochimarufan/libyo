@@ -194,10 +194,10 @@ class DataDescriptor2(DataDescriptor):
         self.values[obj] = value
     
     def __get__(self, obj, objtype=None):
-        if obj in self.values:
+        if not obj:
+            return self
+        elif obj in self.values:
             return self.values[obj]
-        elif objtype and objtype in self.values:
-            return self.values[objtype]
         else:
             return self.value
 
@@ -209,6 +209,28 @@ class SetterVar(DataDescriptor2):
     
     def __set__(self, obj, value):
         super(SetterVar, self).__set__(self.setter(obj, value))
+
+
+class TypeVar2(DataDescriptor2):
+    def __init__(self, vtype, value=None):
+        super(TypeVar2, self).__init__(value)
+        self.type = vtype
+    
+    def __set__(self, obj, value):
+        super(TypeVar2, self).__set__(obj, self.type(value))
+
+
+class TypeTriggerVar3(TypeVar2):
+    def __init__(self, vtype, trigger, value=None):
+        super(TypeTriggerVar3, self).__init__(vtype, value)
+        self.trigger = trigger
+    
+    def __set__(self, obj, value):
+        super(TypeTriggerVar3, self).__set__(obj, value)
+        self.trigger.__get__(obj)(super(TypeTriggerVar3, self).__get__(obj))
+    
+    def notrigger(self, obj, value):
+        super(TypeTriggerVar3, self).__set__(obj, value)
 
 
 #------------------------------------------------------------------------------
@@ -226,6 +248,28 @@ def getterFunc(instance, varname):
     def getter(self):
         getattr(self, varname)
     return getter.__get__(instance)
+
+
+def SetterDescriptor(object):
+    def __init__(self, attr_name):
+        self.attr_name = attr_name
+   
+    def __get__(self, obj, otype=None):
+        if not obj:
+            return self
+        else:
+            return lambda v: setattr(obj, self.attr_name, v)
+
+
+def GetterDescriptor(object):
+    def __init__(self, attr_name):
+        self.attr_name = attr_name
+    
+    def __get__(self, obj, otype=None):
+        if not obj:
+            return self
+        else:
+            return lambda: getattr(obj, self.attr_name)
 
 
 #------------------------------------------------------------------------------

@@ -39,6 +39,9 @@ from ..urllib import oauth2
 from ..urllib import request
 import json
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 _cache = None
 _secrets = None
@@ -71,7 +74,7 @@ def _init2():
     global _handler, _opener
     _creds.update_cb = save
     _handler = oauth2.OAuthHandler(_creds)
-    _opener = request.build_opener(_handler)
+    _opener = request.build_opener(_handler, DebugHandler())
 
 
 def urlopen(url):
@@ -103,3 +106,13 @@ def logout():
     global _opener, _handler, _cache, _flow, _creds
     save()
     _opener = _handler = _cache = _flow = _creds = None
+
+
+class DebugHandler(request.BaseHandler):
+    def http_error_403(self, req, fp, *a):
+        logger.info(req.get_full_url())
+        logger.info(fp.read())
+    http_error_400 = http_error_403
+
+
+#_opener_raw = request.build_opener(DebugHandler())
