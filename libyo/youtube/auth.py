@@ -74,7 +74,8 @@ def _init2():
     global _handler, _opener
     _creds.update_cb = save
     _handler = oauth2.OAuthHandler(_creds)
-    _opener = request.build_opener(_handler, DebugHandler())
+    #_opener = request.build_opener(_handler, DebugHandler())
+    _opener = request.build_opener(_handler)
 
 
 def urlopen(url):

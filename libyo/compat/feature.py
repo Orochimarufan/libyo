@@ -27,8 +27,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+libyoRoot = __name__.rsplit(".", 2)[0]
+logger.info("Root: %s" % libyoRoot)
 
-def feature(name, IMPLS, module=__name__.rsplit(".", 1)[0]):
+
+def feature(name, IMPLS, module=libyoRoot):
     import importlib as _import
     for n, p in IMPLS:
         try:

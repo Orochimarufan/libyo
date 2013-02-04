@@ -83,7 +83,8 @@ class WebBackend(AbstractBackend):
         #ext["description"] = self.document.get_element_by_id("eow-description").text
         #ext["uploader"] = self.document.find_class("author")[0].text
 # after Update
-        ext["title"] = self.document.get_element_by_id("watch-headline-title")[0].get("title")
+        #ext["title"] = self.document.get_element_by_id("watch-headline-title")[0].get("title")
+        #ext["title"] = [i for i in self.document.get_element_by_id("watch7-container") if i.tag == "meta" and i.get("itemprop") == "name"][0].get("content")
         ext["description"] = self.document.get_element_by_id("eow-description").text
         ext["uploader"] = self.document.get_element_by_id("watch7-user-header")[1].text
         return ext

@@ -22,12 +22,16 @@
 
 from __future__ import absolute_import, unicode_literals, division
 
+import logging
+
 from .compat import PY3
 from .compat.uni import unichr
 
 from collections import deque
 
 from .compat.html import entities, parser
+
+logger = logging.getLogger(__name__)
 
 
 class Document(object):
@@ -74,6 +78,9 @@ class Tag(object):
     def __getitem__(self, num):
         return self.children.__getitem__(num)
     
+    def __iter__(self):
+        return self.children
+
     def get_element_by_id(self, id): #@ReservedAssignment
         if "id" in self.attrs and self.attrs["id"] == id:
             return self
@@ -126,7 +133,13 @@ class ParserStack(deque):
             return
         self.last().text += text
     
-    def close(self):
+    def close(self, name):
+        # TODO: check tag names
+        if self.last().name != name:
+            logger.warn("Malformed HTML: %s closed but %s last element on stack" % (name, self.last().name))
+        # TODO: be smarter!
+        while self.last().name != name:
+            self.pop()
         return self.pop()
     
     def data(self, name, data):
@@ -148,7 +161,7 @@ class Parser(parser.HTMLParser):
         self.stack.open(name, attrs)
     
     def handle_endtag(self, name):
-        self.stack.close()
+        self.stack.close(name)
     
     def handle_data(self, data):
         self.stack.text(data)
