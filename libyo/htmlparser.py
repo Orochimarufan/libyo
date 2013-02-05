@@ -106,8 +106,16 @@ class Tag(object):
     def text_content(self):
         return self.text
     
-    def __repr__(self):
-        return "<{0} Tag>".format(self.name)
+    def __str__(self):
+        s = ["<Tag: %s" % self.name]
+        if "id" in self.attrs:
+            s.append(" id='%s'" % self.attrs["id"])
+        if "class" in self.attrs:
+            s.append(" class=%s" % self.attrs["class"].split(" "))
+        s.append(">")
+        return "".join(s)
+    
+    __repr__ = __str__
 
 
 class ParserStack(deque):
@@ -123,10 +131,12 @@ class ParserStack(deque):
                 self.document = Document(t)
                 t.parent = self.document
                 self.append(t)
+                self.last_ = t
             else:
                 raise ValueError("Only one top-level Tag allowed!")
         else:
-            self.append(Tag(self.last(), name, attrs))
+            self.last_ = Tag(self.last(), name, attrs)
+            self.append(self.last_)
     
     def text(self, text):
         if len(self) == 0:
@@ -134,12 +144,34 @@ class ParserStack(deque):
         self.last().text += text
     
     def close(self, name):
-        # TODO: check tag names
-        if self.last().name != name:
-            logger.warn("Malformed HTML: %s closed but %s last element on stack" % (name, self.last().name))
-        # TODO: be smarter!
-        while self.last().name != name:
+        # try to get <p><img src='devil'></p> right
+        # TODO: improve self-closing handling
+        while len(self) > 2 and self.last().name != name and \
+                self.last().name in ("input", "meta", "link", "br", "hr", "img", "button"):
+            # move all children to the upper element
+            self[-2].children.extend(self.last().children)
+            self.last().children = list()
             self.pop()
+        
+        # still no match?
+        if self.last().name != name:
+            # maybe the last tag was closed twice?
+            for tag in self:
+                if tag.name == name:
+                    # we found a matching open tag, so we'll assume that it was not
+                    break
+            else:
+                # there are no matching open tags, so we'll assume it was
+                logger.warn("Malformed HTML: %s closed twice (near: %s)" % (name, self.last()))
+                return
+            
+            # pretend others were self-closing
+            # XXX: just pop everything on malformed HTML?
+            logger.warn("Malformed HTML: '%s' closed but last element on stack is %s" % (name, self.last()))
+            while len(self) > 1 and self.last().name != name:
+                self.pop()
+        
+        # pop the tag
         return self.pop()
     
     def data(self, name, data):
@@ -149,13 +181,13 @@ class ParserStack(deque):
 
 
 class Parser(parser.HTMLParser):
-    def __init__(self, *a, **b):
+    def __init__(self, strict=False):
         self.stack = ParserStack()
         self.rawddata = ""
         if PY3:
-            super(Parser, self).__init__(*a, **b)
+            super(Parser, self).__init__(strict)
         else:
-            parser.HTMLParser.__init__(self, *a, **b)
+            parser.HTMLParser.__init__(self, strict)
     
     def handle_starttag(self, name, attrs):
         self.stack.open(name, attrs)
@@ -214,3 +246,4 @@ def fragment_fromstring(markup):
     p = Parser()
     p.feed(markup)
     return p.stack.document.root
+
