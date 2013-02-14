@@ -155,6 +155,6 @@ class YoutubeDLBackend(AbstractBackend):
         return results
     
     def trouble(self, level, reason):
-        logging.getLogger("libyo.youtube.resolve.YoutubeDLBackend").log(reason, level=getattr(logging, level))
+        logging.getLogger("libyo.youtube.resolve.YoutubeDLBackend").log(getattr(logging, level), reason)
         if level == 'ERROR':
             raise BackendFailedException()

@@ -21,16 +21,19 @@
 """
 from __future__ import absolute_import, unicode_literals, division
 
+import json
+import logging
+logger  = logging.getLogger("libyo.youtube.resolve.WebBackend")
+
 from ...compat.uni import unicode_unescape
 from ...util.util import sdict_parser
 from ..exception import BackendFailedException
-import logging
-logger  = logging.getLogger("libyo.youtube.resolve.WebBackend")
 from ... import urllib
-
 from ...compat import htmlparser
+
 if htmlparser.IMPL != "lxml": #@UndefinedVariable
     logger.warn("LXML not avaiable. Please Install it from http://lxml.de for full functionality and performance!")
+
 from .AbstractBackend import AbstractBackend
 
 
@@ -44,45 +47,26 @@ class WebBackend(AbstractBackend):
         r.add_header("UserAgent", self.FakeAgent)
         r.add_header("Referer", "http://www.youtube.com")
         self.hook = urllib.request.urlopen(r)
-    
-    @staticmethod
-    def fvars_parser(fvars):
-        main = sdict_parser(fvars, unq=0)
-        if "url_encoded_fmt_stream_map" not in main:
-            return False
-        map6 = [sdict_parser(i, unq=2) for i in \
-                urllib.parse.unquote(main["url_encoded_fmt_stream_map"]).split(",")]
-        main = sdict_parser(fvars)
-        main["fmt_stream_map"] = map6
-        main["fmt_url_map"] = dict([
-                                    (
-                                     int(i["itag"]),
-                                     "".join((i["url"], "&signature=", i["sig"]))
-                                    ) for i in map6
-                                   ])
-        return main
 
     def unpack_data(self):
-        try:
-            #before update, id was "watch-video".
-            div = self.document.get_element_by_id("watch7-video")
-            src = div[2].text
-            ibgn = src.index(" = \"") + 4
-            iend = src.index("\\n\";\n", ibgn)
-            strn = unicode_unescape(src[ibgn:iend].strip())
-            doc = htmlparser.fragment_fromstring(strn)
-            fvars = doc.get("flashvars")
-        except (IndexError, KeyError):
-            raise BackendFailedException("could not fetch flashvars")
-        return self.fvars_parser(fvars)
+        #2013-02-14: youtube now uses JS completely
+        div = self.document.get_element_by_id("watch7-video")
+        src = div[1].text
+        ibgn = src.index(" = {") + 3
+        iend = src.rindex("};") + 1
+        strn = unicode_unescape(src[ibgn:iend].strip())
+        # hope that it'll be valud JSON
+        fvars = json.loads(strn)["args"]
+        fvars["fmt_stream_map"] = [sdict_parser(i, unq=2) for i in fvars["url_encoded_fmt_stream_map"].split(",")]
+        fvars["fmt_url_map"] = dict([(
+                                      int(i["itag"]),
+                                      "&signature=".join((i["url"], i["sig"]))
+                                     ) for i in fvars["fmt_stream_map"]])
+        return fvars
     
     def unpack_meta(self):
         ext = {}
-# before Update
-        #ext["title"] = self.document.get_element_by_id("eow-title").get("title")
-        #ext["description"] = self.document.get_element_by_id("eow-description").text
-        #ext["uploader"] = self.document.find_class("author")[0].text
-# after Update
+        # "title" is now in the fvars data
         #ext["title"] = self.document.get_element_by_id("watch-headline-title")[0].get("title")
         #ext["title"] = [i for i in self.document.get_element_by_id("watch7-container") if i.tag == "meta" and i.get("itemprop") == "name"][0].get("content")
         ext["description"] = self.document.get_element_by_id("eow-description").text

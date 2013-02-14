@@ -7,9 +7,10 @@ Created on 01.02.2012
 from __future__ import absolute_import, unicode_literals, division
 
 from .AbstractBackend import AbstractBackend
-from .WebBackend import WebBackend
 from ..exception import BackendFailedException
 from ... import urllib
+from ...util.util import sdict_parser
+
 import logging
 
 logger = logging.getLogger("libyo.youtube.resolve.EmbedBackend")
@@ -17,6 +18,23 @@ logger = logging.getLogger("libyo.youtube.resolve.EmbedBackend")
 
 class EmbedBackend(AbstractBackend):
     base_url = "http://youtube.com/get_video_info?video_id="
+    
+    @staticmethod
+    def fvars_parser(fvars):
+        main = sdict_parser(fvars, unq=0)
+        if "url_encoded_fmt_stream_map" not in main:
+            return False
+        map6 = [sdict_parser(i, unq=2) for i in \
+                urllib.parse.unquote(main["url_encoded_fmt_stream_map"]).split(",")]
+        main = sdict_parser(fvars)
+        main["fmt_stream_map"] = map6
+        main["fmt_url_map"] = dict([
+                                    (
+                                     int(i["itag"]),
+                                     "".join((i["url"], "&signature=", i["sig"]))
+                                    ) for i in map6
+                                   ])
+        return main
     
     @staticmethod
     def _decode(data):
@@ -35,7 +53,7 @@ class EmbedBackend(AbstractBackend):
         else:
             data = conn.read()
             conn.close()
-        f = WebBackend.fvars_parser(self._decode(data))
+        f = self.fvars_parser(self._decode(data))
         if (not f):
             raise BackendFailedException("fvars parser returned false")
         if ("token" not in f or "reason" in f):
