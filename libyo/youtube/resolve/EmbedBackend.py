@@ -13,7 +13,7 @@ from ...util.util import sdict_parser
 
 import logging
 
-logger = logging.getLogger("libyo.youtube.resolve.EmbedBackend")
+logger = logging.getLogger(__name__)
 
 
 class EmbedBackend(AbstractBackend):

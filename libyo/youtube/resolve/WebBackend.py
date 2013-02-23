@@ -21,9 +21,10 @@
 """
 from __future__ import absolute_import, unicode_literals, division
 
+import re
 import json
 import logging
-logger  = logging.getLogger("libyo.youtube.resolve.WebBackend")
+logger  = logging.getLogger(__name__)
 
 from ...compat.uni import unicode_unescape
 from ...util.util import sdict_parser
@@ -41,6 +42,11 @@ class WebBackend(AbstractBackend):
     FakeAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.4 (KHTML, like Gecko) Chrome/22.0.1229.79 Safari/537.4"
     base_url = "http://www.youtube.com/watch?v="
     
+    # for some goddamn reason dquotes inside strings don't get escaped by google
+    # if lookback expressions (?<!) could catch dynamic length stuff, this'd be much easier
+    # sub() it with '\\1\\"'
+    re_json_fix_quot = re.compile(r"([^\{\[,:\s]\s*)(?<!\\)\"(?!\s*[:,\}\]])")
+
     def open_page(self):
         url = "".join((self.base_url, str(self.video_id)))
         r = urllib.request.Request(url)
@@ -51,12 +57,30 @@ class WebBackend(AbstractBackend):
     def unpack_data(self):
         #2013-02-14: youtube now uses JS completely
         div = self.document.get_element_by_id("watch7-video")
+        try:
+            una = div.get_element_by_id("unavailable-message")
+        except KeyError:
+            una = None
+        if una is not None:
+            t = una.text.strip('"').strip()
+            raise BackendFailedException("Youtube said: %s" % t)
         src = div[1].text
-        ibgn = src.index(" = {") + 3
-        iend = src.rindex("};") + 1
+        ibgn = src.index("{")
+        iend = src.rindex("}") + 1
         strn = unicode_unescape(src[ibgn:iend].strip())
-        # hope that it'll be valud JSON
-        fvars = json.loads(strn)["args"]
+        # fix quotes
+        strn = self.re_json_fix_quot.sub('\\1\\"', strn)
+        # hope that it'll be valid JSON
+        try:
+            fvars = json.loads(strn, strict=False)["args"]
+        except:
+            # store the json in /tmp for debugging
+            import tempfile
+            fp = tempfile.NamedTemporaryFile("w", suffix=".json", prefix="libyo.youtube.WebBackend-", delete=False)
+            logger.error("Json Error. questionable json written to %s" % fp.name)
+            fp.write(strn)
+            fp.close()
+            raise
         fvars["fmt_stream_map"] = [sdict_parser(i, unq=2) for i in fvars["url_encoded_fmt_stream_map"].split(",")]
         fvars["fmt_url_map"] = dict([(
                                       int(i["itag"]),
@@ -84,4 +108,3 @@ class WebBackend(AbstractBackend):
         data = self.unpack_data()
         data.update(self.unpack_meta())
         return data
-
