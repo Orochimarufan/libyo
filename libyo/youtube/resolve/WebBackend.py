@@ -21,12 +21,10 @@
 """
 from __future__ import absolute_import, unicode_literals, division
 
-import re
 import json
 import logging
 logger  = logging.getLogger(__name__)
 
-from ...compat.uni import unicode_unescape
 from ...util.util import sdict_parser
 from ..exception import BackendFailedException
 from ... import urllib
@@ -41,11 +39,6 @@ from .AbstractBackend import AbstractBackend
 class WebBackend(AbstractBackend):
     FakeAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.4 (KHTML, like Gecko) Chrome/22.0.1229.79 Safari/537.4"
     base_url = "http://www.youtube.com/watch?v="
-    
-    # for some goddamn reason dquotes inside strings don't get escaped by google
-    # if lookback expressions (?<!) could catch dynamic length stuff, this'd be much easier
-    # sub() it with '\\1\\"'
-    re_json_fix_quot = re.compile(r"([^\{\[,:\s]\s*)(?<!\\)\"(?!\s*[:,\}\]])")
 
     def open_page(self):
         url = "".join((self.base_url, str(self.video_id)))
@@ -67,18 +60,15 @@ class WebBackend(AbstractBackend):
         src = div[1].text
         ibgn = src.index("{")
         iend = src.rindex("}") + 1
-        strn = unicode_unescape(src[ibgn:iend].strip())
-        # fix quotes
-        strn = self.re_json_fix_quot.sub('\\1\\"', strn)
-        # hope that it'll be valid JSON
+        script = src[ibgn:iend]
         try:
-            fvars = json.loads(strn, strict=False)["args"]
+            fvars = json.loads(script, strict=False)["args"]
         except:
             # store the json in /tmp for debugging
             import tempfile
             fp = tempfile.NamedTemporaryFile("w", suffix=".json", prefix="libyo.youtube.WebBackend-", delete=False)
             logger.error("Json Error. questionable json written to %s" % fp.name)
-            fp.write(strn)
+            fp.write(script)
             fp.close()
             raise
         fvars["fmt_stream_map"] = [sdict_parser(i, unq=2) for i in fvars["url_encoded_fmt_stream_map"].split(",")]
