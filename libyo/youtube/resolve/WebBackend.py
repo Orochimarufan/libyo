@@ -49,7 +49,7 @@ class WebBackend(AbstractBackend):
 
     def unpack_data(self):
         #2013-02-14: youtube now uses JS completely
-        div = self.document.get_element_by_id("watch7-video")
+        div = self.document.get_element_by_id("player") # watch7-video
         try:
             una = div.get_element_by_id("unavailable-message")
         except KeyError:
@@ -57,8 +57,8 @@ class WebBackend(AbstractBackend):
         if una is not None:
             t = una.text.strip('"').strip()
             raise BackendFailedException("Youtube said: %s" % t)
-        src = div[1].text
-        ibgn = src.index("{")
+        src = div[2].text
+        ibgn = src.index("ytplayer.config = {") + 18
         iend = src.rindex("}") + 1
         script = src[ibgn:iend]
         try:

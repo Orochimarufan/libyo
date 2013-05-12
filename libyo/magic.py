@@ -1,6 +1,6 @@
 """
 ----------------------------------------------------------------------
-- etree.py: ElementTree Implementation Proxy
+- magic : unix 'file' magic
 ----------------------------------------------------------------------
 - Copyright (C) 2011-2012  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>

@@ -29,7 +29,7 @@ if (PY3):
 
 else:
     import urllib as _urllib
-    import urllib2 as _urllib2
+    import urllib2 as _urllib2  # @UnresolvedImport
     
     #########################################################################
     # urllib.request                                                        #
