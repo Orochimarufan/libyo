@@ -24,10 +24,10 @@ from __future__ import absolute_import, unicode_literals, division
 import re
 from ..util.util import sdict_parser
 
-regexp = re.compile(r"^(?:https?\:\/\/)?(?:www\.)?youtu(?:be\..{2,3}\/watch\?.*v\=.+(?:\&.+)*|\.be\/.+)$")
-yt_reg = re.compile(r"^(?:https?\:\/\/)?(?:www\.)?youtube\..{2,3}\/watch\?(.*)$")
+regexp = re.compile(r"^(?:https?\:\/\/)?(?:www\.|m\.)?youtu(?:be\..{2,3}\/watch\?.*v\=.+(?:\&.+)*|\.be\/.+)$")
+yt_reg = re.compile(r"^(?:https?\:\/\/)?(?:www\.|m\.)?youtube\..{2,3}\/watch\?(.*)$")
 fb_reg = re.compile(r"^(?:https?\:\/\/)?(?:www\.)?facebook.com\/l\.php\?(.*)$")
-be_reg = re.compile(r"^(?:https?\:\/\/)?(?:www\.)?youtu.be\/([^\/?]*)")
+be_reg = re.compile(r"^(?:https?\:\/\/)?(?:www\.)?youtu.be\/([^\/?]*)$")
 
 
 def sdict_key(sdict, key):
