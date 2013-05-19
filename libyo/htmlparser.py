@@ -2,7 +2,7 @@
 ----------------------------------------------------------------------
 - htmlparser: Simple HTML Parser Implementation
 ----------------------------------------------------------------------
-- Copyright (C) 2011-2012  Orochimarufan
+- Copyright (C) 2011-2013  Orochimarufan
 -                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
 -
 - This program is free software: you can redistribute it and/or modify
@@ -20,23 +20,19 @@
 ----------------------------------------------------------------------
 """
 
-from __future__ import absolute_import, unicode_literals, division
+from __future__ import absolute_import, unicode_literals
 
 import logging
 import re
 
 from collections import deque
 
-from .compat import PY3
 from .compat.uni import unichr
 from .compat.html import entities, parser
 
 from .urllib.request import urlopen
 
-if PY3:
-    import builtins
-else:
-    import __builtin__ as builtins
+from . import etree
 
 logger = logging.getLogger(__name__)
 
@@ -56,311 +52,24 @@ class Document(object):
 
     def find_class(self, name):
         return self.root.find_class(name)
+    
+    def find(self, path):
+        return self.root.find(path)
+    
+    def findall(self, path):
+        return self.root.findall(path)
+    
+    def iterfind(self, path):
+        return self.root.iterfind(path)
+    
+    def findtext(self, path, default=None):
+        return self.root.findtext(path, default)
+    
+    def iter(self):
+        return self.root.iter()
 
 
-class Element(object):
-    """
-    A DOM Element
-    """
-    __slots__ = ("_parent","_tag","_attrib","text","tail","_children")
-
-    # Properties
-    @property
-    def tag(self):
-        """
-        Element tag
-        """
-        return self._tag
-
-    @property
-    def attrib(self):
-        """
-        Element attribute dictionary. Where possible, use get(), set(), keys(), values() and items() to access element attributes.
-        """
-        return dict(self._attrib)
-
-    @property
-    def _index(self):
-        return self._parent.index(self)
-
-    # Constructor
-    def __init__(self, tag, attrib):
-        """
-        Create an Element.
-        """
-        self._parent = None
-        self._tag = tag
-        self._attrib = dict(attrib)
-        self.text = None
-        self.tail = None
-        self._children = list()
-
-    # String representations
-    def __repr__(self):
-        """
-        A readable representation
-        """
-        return "".join((
-            "<%s Element" % self.tag,
-            " id=%s" % self._attrib["id"] if "id" in self._attrib else "",
-            " class=%s" % self._attrib["class"] if "class" in self._attrib else "",
-            " at 0x%x>" % id(self)))
-
-    # sequence api
-    def __contains__(self, elem):
-        return elem in self._children
-
-    def __delitem__(self, index):
-        del self._children[index]
-
-    def __getitem__(self, index):
-        return self._children[index]
-
-    def __iter__(self):
-        return iter(self._children)
-
-    def __len__(self):
-        return len(self._children)
-
-    def __reversed__(self):
-        return reversed(self._children)
-
-    def __setitem__(self, index, elem):
-        elem._assign(self)
-        self._children[index] = elem
-
-    def _assign(self, parent):
-        if self._parent is not None:
-            self._parent.remove(self)
-        self._parent = parent
-
-    # lxml.etree api
-    def addnext(self, elem):
-        """
-        Adds the element as a following sibling directly after this element.
-
-        This is normally used to set a processing instruction or comment after the root node of a document. Note that tail text is automatically discarded when adding at the root level.
-        """
-        self._parent.insert(self._index + 1, elem)
-
-    def addprevious(self, elem):
-        """
-        Adds the element as a preceding sibling directly before this element.
-
-        This is normally used to set a processing instruction or comment before the root node of a document. Note that tail text is automatically discarded when adding at the root level.
-        """
-        self._parent.insert(self._index, elem)
-
-    def append(self, elem):
-        """
-        Adds a subelement to the end of this element.
-        """
-        elem._assign(self)
-        self._children.append(elem)
-
-    def clear(self):
-        """
-        Resets an element. This function removes all subelements, clears all attributes and sets the text and tail properties to None.
-        """
-        self._attrib = dict()
-        self._text = None
-        self._tail = None
-        self._children = list()
-
-    def extend(self, elements):
-        """
-        Extends the current children by the elements in the iterable.
-        """
-        for elem in elements:
-            self.append(elem)
-
-    # TODO
-    # def find(path):
-    # def findall(path):
-    # def findtext(path):
-
-    def get(self, attrib, default=None):
-        """
-        Gets an element attribute.
-        """
-        return self._attrib.get(attrib, default)
-
-    def getnext(self):
-        """
-        Returns the following sibling of this element or None.
-        """
-        ix = self._index
-        if ix == len(self._parent):
-            return None
-        return self._parent[ix + 1]
-
-    def getparent(self):
-        """
-        Returns the parent of this element or None for the root element.
-        """
-        return self._parent
-
-    def getprevious(self):
-        """
-        Returns the preceding sibling of this element or None.
-        """
-        ix = self._index
-        if ix == 0:
-            return None
-        return self._parent[ix - 1]
-
-    def getroottree(self):
-        """
-        Return an ElementTree for the root node of the document that contains this element.
-
-        This is the same as following element.getparent() up the tree until it returns None (for the root element) and then build an ElementTree for the last parent that was returned.
-        """
-        parent = self
-        while parent is not None:
-            parent = parent.getparent()
-        return Document(parent)
-
-    def index(self, elem):
-        """
-        Find the position of the child within the parent.
-        """
-        return self._children.index(elem)
-
-    def insert(self, index, element):
-        """
-        Inserts a subelement at the given position in this element
-        """
-        element._assign(self)
-        self._children.insert(index, element)
-
-    def items(self):
-        """
-        Gets element attributes, as a sequence. The attributes are returned in an arbitrary order.
-        """
-        return self._attrib.items()
-
-    def iter(self, *tags):
-        """
-        Iterate over all elements in the subtree in document order (depth first pre-order), starting with this element.
-
-        Can be restricted to find only elements with a specific tag.
-
-        Passing a sequence of tags will let the iterator return all elements matching any of these tags, in document order.
-        """
-        stack = deque([self])
-        if tags:
-            while stack:
-                node = stack.pop()
-                if node.tag in tags:
-                    yield node
-                stack.extend(reversed(node))
-        else:
-            while stack:
-                node = stack.popleft()
-                yield node
-                stack.extend(reversed(node))
-
-    def iterancestors(self, *tags):
-        """
-        Iterate over the ancestors of this element (from parent to parent).
-        """
-        x = self._parent
-        while x is not None:
-            yield x
-            x = x.getparent()
-
-    def iterchildren(self, tag=None, reversed=False, *tags):
-        """
-        Iterate over the children of this element.
-
-        As opposed to using normal iteration on this element, the returned elements can be reversed with the 'reversed' keyword and restricted to find only elements with a specific tag
-        """
-        if tags is None:
-            tags = list()
-        if tag is not None:
-            tags.insert(0, tag)
-        x = builtins.reversed(self._children) if reversed else iter(self._children)
-        if tags:
-            return (child for child in x if child.tag in tags)
-        else:
-            return x
-
-    def iterdescendants(self, *tags):
-        """
-        Iterate over the descendants of this element in document order.
-
-        As opposed to el.iter(), this iterator does not yield the element itself. The returned elements can be restricted to find only elements with a specific tag, see iter.
-        """
-        stack = deque(reversed(self._children))
-        if tags:
-            while stack:
-                node = stack.pop()
-                if node.tag in tags:
-                    yield node
-                stack.extend(reversed(node))
-        else:
-            while stack:
-                node = stack.pop()
-                yield node
-                stack.extend(reversed(node))
-
-    # TODO
-    # def iterfind(self, path):
-
-    def itersiblings(self, tag=None, preceding=False, *tags):
-        """
-        Iterate over the following or preceding siblings of this element.
-
-        The direction is determined by the 'preceding' keyword which defaults to False, i.e. forward iteration over the following siblings. When True, the iterator yields the preceding siblings in reverse document order, i.e. starting right before the current element and going backwards.
-
-        Can be restricted to find only elements with a specific tag
-        """
-        if tags is None:
-            tags = list()
-        if tag is not None:
-            tags.insert(0, tag)
-        x = reversed(self._parent[:self._index]) if preceding else iter(self._parent[self._index+1:])
-        if tags:
-            return (sib for sib in x if sib.tag in tags)
-        else:
-            return x
-    # TODO
-    # def itertext(self, tag=None, with_tail=True, *tags):
-
-    def keys(self):
-        """
-        Gets a list of attribute names. The names are returned in an arbitrary order (just like for an ordinary Python dictionary).
-        """
-        return self._attrib.keys()
-
-    def remove(self, elem):
-        """
-        Removes a matching subelement. Unlike the find methods, this method compares elements based on identity, not on tag value or contents.
-        """
-        self._children.remove(elem)
-
-    def replace(self, elem, new_elem):
-        """
-        Replaces a subelement with the element passed as second argument.
-        """
-        new_elem._assign(self)
-        self._children[self._children.index(elem)] = new_elem
-
-    def set(self, attrib, value):
-        """
-        Sets an element attribute.
-        """
-        self._attrib[attrib] = value
-
-    def values(self):
-        """
-        Gets element attribute values as a sequence of strings. The attributes are returned in an arbitrary order.
-        """
-        return self._attrib.values()
-
-    # TODO
-    # def xpath(self, path, ...):
-
+class Mixin(object):
     # lxml.html api
     def drop_tree(self):
         """
@@ -386,12 +95,19 @@ class Element(object):
         >>> print(tostring(h, encoding=unicode))
         <div>Hello World!</div>
         """
-        parent = self.getparent()
-        if parent.text is not None:
-            parent.text += self.text + self.tail
-        else:
-            parent.text = self.text + self.tail
         ix = self._index
+        parent = self.getparent()
+        if ix == 0:
+            if parent.text is not None:
+                parent.text += self.text + self.tail
+            else:
+                parent.text = self.text + self.tail
+        else:
+            elem = self.getprevious()
+            if elem.tail is not None:
+                elem.tail += self.text + self.tail
+            else:
+                elem.tail = self.text + self.tail
         for child in reversed(self._children):
             parent.insert(ix, child)
         parent.remove(self)
@@ -402,7 +118,7 @@ class Element(object):
         Note that class names are space separated in HTML, so doc.find_class_name('highlight')
         will find an element like <div class="sidebar highlight">. Class names are case sensitive.
         """
-        return [elem for elem in self.iter() if name in elem.get("class", [])]
+        return [elem for elem in self.iter() if name in elem.get("class", "").split(" ")]
 
     # TODO
     # def find_rel_links(self, rel):
@@ -446,96 +162,25 @@ class Element(object):
         return "".join(self._iter_text_content())
 
 
-class _ContentOnlyElement(Element):
-    __slots__ = ("_parent","text","tail")
-
-    def __init__(self, text=None):
-        self._parent = None
-        self.tail = None
-        self.text = text
-
-    def _raiseImmutable(self):
-        raise TypeError("this element does not have children or attributes")
-
-    def set(self, key, default=None):
-        _raiseImmutable()
-
-    def append(self, elem):
-        _raiseImmutable()
-
-    def insert(self, index, elem):
-        _raiseImmutable()
-
-    def __setitem__(self, index, elem):
-        _raiseImmutable()
-
-    def __reversed__(self):
-        return []
-
-    def __iter__(self):
-        return iter([])
-
-    def __delitem__(self, index):
-        _raiseImmutable()
-
-    def __contains__(self, other):
-        return False
-
-    @property
-    def attrib(self):
-        return {}
-
-    def __getitem__(self, i):
-        if isinstance(i, slice):
-            return []
-        else:
-            raise IndexError("list index out of range")
-
-    def get(self, value, default=None):
-        return default
-
-    keys = values = items = lambda self: []
-
-
-class Comment(_ContentOnlyElement):
-    @property
-    def tag(self):
-        return Comment
-
+class Element(etree.Element, Mixin):
+    # String representations
     def __repr__(self):
-        return "<!--%s-->" % self.text
-
-
-class ProcessingInstruction(_ContentOnlyElement):
-    @property
-    def tag(self):
-        return ProcessingInstruction
-
-    _FIND_PI_ATTRIBUTES = re.compile(r'\s+(\w+)\s*=\s*(?:\'([1\']*)\'|"([^"]*)")', re.U).findall
-
-    @property
-    def attrib(self):
         """
-        Returns a dict containing all pseudo-attributes that can be
-        parsed from the text content of this processing instruction.
-        Note that modifying the dict currently has no effect on the
-        XML node, although this is not guaranteed to stay this way.
+        A readable representation
         """
-        return { attr : (value1 or value2)
-               for attr, value1, value2 in self._FIND_PI_ATTRIBUTES(' ' + self.text) }
+        return "".join((
+            "<%s Element" % self.tag,
+            " id=%s" % self._attrib["id"] if "id" in self._attrib else "",
+            " class=%s" % [i for i in self._attrib["class"].split(" ") if i] if "class" in self._attrib else "",
+            " at 0x%x>" % id(self)))
 
-    def get(self, key, default=None):
-        """
-        Try to parse pseudo-attributes from the text content of the
-        processing instruction, search for one with the given key as
-        name and return its associated value.
 
-        Note that this is only a convenience method for the most
-        common case that all text content is structured in
-        attribute-like name-value pairs with properly quoted values.
-        It is not guaranteed to work for all possible text content.
-        """
-        return self.attrib.get(key, default)
+class Comment(etree.Comment, Mixin):
+    pass
+
+
+class ProcessingInstruction(etree.ProcessingInstruction, Mixin):
+    pass
 
 
 class Parser(deque):
@@ -686,6 +331,9 @@ class HTMLParser(parser.HTMLParser):
 _url_reg = re.compile(r'\w+://')
 
 def parse(file_or_url):
+    """
+    Parses the named file or url, or if the object has a .read() method, parses from that.
+    """
     p = HTMLParser()
     if hasattr(file_or_url, "read"):
         s = file_or_url.read()
@@ -708,8 +356,14 @@ def parse(file_or_url):
     return p.get_document()
 
 
-def fragment_fromstring(markup):
+def fragment_fromstring(markup, create_parent=None):
+    """
+    Returns an HTML fragment from a string. The fragment must contain just a single element, unless create_parent is given; e.g,. fragment_fromstring(string, create_parent='div') will wrap the element in a <div>.
+    """
     p = HTMLParser()
+    if create_parent is not None:
+        p.parser.root = Element(create_parent, {})
+        p.parser.append(p.parser.root)
     p.feed(markup)
     return p.get_root()
 
