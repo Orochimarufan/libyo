@@ -29,6 +29,7 @@ from collections import deque
 
 from .compat.uni import unichr
 from .compat.html import entities, parser
+from .compat import PY3
 
 from .urllib.request import urlopen
 
@@ -37,39 +38,21 @@ from . import etree
 logger = logging.getLogger(__name__)
 
 
-class Document(object):
+class Document(etree.ElementTree):
     """
     A DOM Document
     """
-    def __init__(self, root):
-        self.root = root
-    
-    def getroot(self):
-        return self.root
+    __slots__ = ()
 
     def get_element_by_id(self, id, default=None):
-        return self.root.get_element_by_id(id)
+        return self._root.get_element_by_id(id)
 
     def find_class(self, name):
-        return self.root.find_class(name)
-    
-    def find(self, path):
-        return self.root.find(path)
-    
-    def findall(self, path):
-        return self.root.findall(path)
-    
-    def iterfind(self, path):
-        return self.root.iterfind(path)
-    
-    def findtext(self, path, default=None):
-        return self.root.findtext(path, default)
-    
-    def iter(self):
-        return self.root.iter()
+        return self._root.find_class(name)
 
 
 class Mixin(object):
+    __slots__ = ()
     # lxml.html api
     def drop_tree(self):
         """
@@ -161,8 +144,17 @@ class Mixin(object):
         """
         return "".join(self._iter_text_content())
 
+    def getroottree(self):
+        """
+        Return a Document instance for the root node of the document that contains this element.
+
+        This is the same as following element.getparent() up the tree until it returns None (for the root element) and then build a Document for the last parent that was returned.
+        """
+        return Document(self.getroot())
+
 
 class Element(etree.Element, Mixin):
+    __slots__ = ()
     # String representations
     def __repr__(self):
         """
@@ -176,10 +168,12 @@ class Element(etree.Element, Mixin):
 
 
 class Comment(etree.Comment, Mixin):
+    __slots__ = ()
     pass
 
 
 class ProcessingInstruction(etree.ProcessingInstruction, Mixin):
+    __slots__ = ()
     pass
 
 
@@ -187,10 +181,12 @@ class Parser(deque):
     """
     The Parser itself.
     """
+    __slots__ = ("root",)
+
     def __init__(self):
         super(Parser, self).__init__()
         self.root = None
-    
+
     def open(self, name, attrs):
         """ Open a new Tag """
         if not len(self):
@@ -203,7 +199,7 @@ class Parser(deque):
             this = Element(name, attrs)
             self[-1].append(this)
             self.append(this)
-    
+
     def text(self, text):
         """ put Text data """
         if len(self) == 0:
@@ -221,7 +217,7 @@ class Parser(deque):
             e.text += text
         else:
             e.text = text
-    
+
     def close(self, name):
         """
         Close a tag.
@@ -234,7 +230,7 @@ class Parser(deque):
             # move all children to the upper element
             self[-2].extend(self[-1])
             self.pop()
-        
+
         # still no match?
         if self[-1].tag != name:
             # maybe the last tag was closed twice?
@@ -246,16 +242,16 @@ class Parser(deque):
                 # there are no matching open tags, so we'll assume it was
                 logger.warn("Malformed HTML: %s closed twice (near: %s)" % (name, repr(self[-1])))
                 return
-            
+
             # pretend others were self-closing
             # XXX: just pop everything on malformed HTML?
             logger.warn("Malformed HTML: '%s' closed but last element on stack is %s" % (name, repr(self[-1])))
             while len(self) > 1 and self[-1].tag != name:
                 self.pop()
-        
+
         # pop the tag
         return self.pop()
-    
+
     def comment(self, data):
         """ XML Comment """
         if len(self) == 0:
@@ -276,17 +272,21 @@ class HTMLParser(parser.HTMLParser):
     def __init__(self, strict=False):
         self.parser = Parser()
         self.rawddata = ""
-        super(HTMLParser, self).__init__(strict)
-    
+        if PY3:
+            super(HTMLParser, self).__init__(strict)
+        else:
+            # in python 2.x, HTMLParser is a old-style class and doesn't support strict
+            parser.HTMLParser.__init__(self)
+
     def handle_starttag(self, name, attrs):
         self.parser.open(name, attrs)
-    
+
     def handle_endtag(self, name):
         self.parser.close(name)
-    
+
     def handle_data(self, data):
         self.parser.text(data)
-    
+
     def handle_charref(self, name):
         if name.startswith("x"):
             i = int(name.lstrip("x"), 16)
@@ -297,7 +297,7 @@ class HTMLParser(parser.HTMLParser):
         except (ValueError, OverflowError):
             c = ""
         self.handle_data(c)
-    
+
     def handle_entityref(self, name):
         i = entities.name2codepoint.get(name)
         if i is not None:
@@ -305,10 +305,10 @@ class HTMLParser(parser.HTMLParser):
         else:
             c = "&{0};".format(name)
         self.handle_data(c)
-    
+
     def handle_comment(self, data):
         self.parser.comment(data)
-    
+
     def handle_pi(self, data):
         if data.endswith("?") and data.lower().startswith("xml"):
             # "An XHTML processing instruction using the trailing '?'

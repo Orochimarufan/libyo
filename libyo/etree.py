@@ -29,25 +29,142 @@ from collections import deque
 try:
     from xml.etree import ElementPath
 except ImportError:
-    ElementPath = None
+    try:
+        from elementtree import ElementPath
+    except ImportError:
+        ElementPath = None
 
 from . import tree
+
+
+class ElementTree(object):
+    """
+    A DOM Tree
+    """
+    __slots__ = ("_root",)
+
+    # TODO:
+    # make methods on this respect the root
+
+    def __init__(self, root):
+        self._root = root
+
+    def getroot(self):
+        return self._root
+
+    def _setroot(self, root):
+        """
+        Relocate the ElementTree to a new root node.
+        """
+        self._root = root
+
+    def find(self, path, namespaces=None):
+        """
+        Finds the first toplevel element with given tag. Same as tree.getroot().find(path).
+        """
+        return self._root.find(path, namespaces)
+
+    def findall(self, path, namespaces=None):
+        """
+        Finds all elements matching the ElementPath expression. Same as getroot().findall(path).
+        """
+        return self._root.findall(path, namespaces)
+
+    def findtext(self, path, default=None, namespaces=None):
+        """
+        Finds the text for the first element matching the ElementPath expression. Same as getroot().findtext(path)
+        """
+        return self._root.findtext(path, default, namespaces)
+
+    def getpath(self, element):
+        """
+        Returns a structural, absolute XPath expression to find that element.
+        """
+        raise NotImplementedError()
+
+    def iter(self, *tags):
+        """
+        Creates an iterator for the root element. The iterator loops over all elements in this tree, in document order.
+        """
+        return self._root.iter(*tags)
+
+    def iterfind(self, path, namespaces=None):
+        """
+        Iterates over all elements matching the ElementPath expression. Same as getroot().iterfind(path).
+        """
+        return self._root.iterfind(path, namespaces)
+
+    def parse(self):
+        """
+        Updates self with the content of source and returns its root
+        """
+        raise NotImplementedError()
+
+    def relaxng(self, relaxng):
+        """
+        Validate this document using other document.
+        """
+        raise NotImplementedError()
+
+    def write(self, file, encoding=None, method="xml", pretty_print=False,
+                xml_declaration=None, with_tail=True, standalone=None,
+                compression=0, exclusive=False, with_comments=True,
+                inclusive_ns_prefixes=None):
+        """
+        Write the tree to a filename, file or file-like object.
+        """
+        raise NotImplementedError()
+
+    def write_c14n(self, file, exclusive=False, with_comments=True, compression=0, inclusive_ns_prefixes=None):
+        """
+        C14N write of document. Always writes UTF-8.
+        """
+        raise NotImplementedError()
+
+    def xinclude(self):
+        """
+        Process the XInclude nodes in this document and include the referenced XML fragments.
+        """
+        raise NotImplementedError()
+
+    def xmlschema(self, xmlschema):
+        """
+        Validate this document using other document.
+        """
+        raise NotImplementedError()
+
+    def xpath(self, path, namespaces=None, extensions=None, smart_strings=True, **_variables):
+        """
+        XPath evaluate in context of document.
+        """
+        raise NotImplementedError()
+
+    def xslt(self, xslt):
+        """
+        Transform this document using other document.
+        """
+        raise NotImplementedError()
 
 
 class Element(tree.Element):
     """
     A DOM Element
     """
-    __slots__ = ("_parent","_children","_tag","_attrib","text","tail")
-    
+    __slots__ = ("_tag", "_attrib", "text", "tail")
+
     # Constructor
-    def __init__(self, tag, attrib):
+    def __init__(self, tag, attrib=None, **extra):
         """
         Create an Element.
         """
         super(Element, self).__init__()
         self._tag = tag
-        self._attrib = dict(attrib)
+        if attrib is not None:
+            self._attrib = dict(attrib)
+        else:
+            self._attrib = dict()
+        if extra:
+            self._attrib.update(extra)
         self.text = None
         self.tail = None
 
@@ -65,7 +182,7 @@ class Element(tree.Element):
         Element attribute dictionary. Where possible, use get(), set(), keys(), values() and items() to access element attributes.
         """
         return dict(self._attrib)
-    
+
     # String representations
     def __repr__(self):
         """
@@ -82,6 +199,12 @@ class Element(tree.Element):
         self._text = None
         self._tail = None
         self._children = list()
+
+    def makeelement(self, tag, attrib=None, **extra):
+        """
+        Create a new element with the same type.
+        """
+        return self.__class__(tag, attrib, **extra)
 
     # we use xml.etree's ElementPath implementation!
     if ElementPath is not None:
@@ -103,18 +226,19 @@ class Element(tree.Element):
                     ElementPath._cache.clear()
                 if path[:1] == "/":
                     raise SyntaxError("cannot use absolute path on element")
-                next = iter(ElementPath.xpath_tokenizer(path, namespaces)).__next__
-                token = next()
+                it = iter(ElementPath.xpath_tokenizer(path, namespaces))
+                next_ = lambda: next(it)
+                token = next_()
                 selector = []
                 while 1:
                     try:
-                        selector.append(ElementPath.ops[token[0]](next, token))
+                        selector.append(ElementPath.ops[token[0]](next_, token))
                     except StopIteration:
                         raise SyntaxError("invalid path")
                     try:
-                        token = next()
+                        token = next_()
                         if token[0] == "/":
-                            token = next()
+                            token = next_()
                     except StopIteration:
                         break
                 ElementPath._cache[path] = selector
@@ -124,16 +248,16 @@ class Element(tree.Element):
             for select in selector:
                 result = select(context, result)
             return result
-        
+
         def find(self, path, namespaces=None):
             try:
                 return next(self.iterfind(path, namespaces))
             except StopIteration:
                 return None
-        
+
         def findall(self, path, namespaces=None):
             return list(self.iterfind(path, namespaces))
-        
+
         def findtext(self, path, default=None, namespaces=None):
             try:
                 elem = next(self.iterfind(path, namespaces))
@@ -143,8 +267,7 @@ class Element(tree.Element):
     else:
         def iterfind(self, path, namespaces=None):
             raise ImportError("*find* functionality relies on xml.etree.ElementPath!")
-        find = iterfind
-        findall = iterfind
+        find = findall = iterfind
         def findtext(self, path, default=None, namespaces=None):
             raise ImportError("*find* functionality relies on xml.etree.ElementPath!")
 
@@ -160,9 +283,7 @@ class Element(tree.Element):
 
         This is the same as following element.getparent() up the tree until it returns None (for the root element) and then build an ElementTree for the last parent that was returned.
         """
-        for i in self.iterancestors():
-            parent = i
-        return Document(parent)
+        return ElementTree(self.getroot())
 
     def items(self):
         """
@@ -170,8 +291,11 @@ class Element(tree.Element):
         """
         return self._attrib.items()
 
-    # TODO
-    # def itertext(self, tag=None, with_tail=True, *tags):
+    def itertext(self, tag=None, with_tail=True, *tags):
+        """
+        Iterates over the text content of a subtree.
+        """
+        raise NotImplementedError()
 
     def keys(self):
         """
@@ -191,12 +315,15 @@ class Element(tree.Element):
         """
         return self._attrib.values()
 
-    # TODO
-    # def xpath(self, path, ...):
+    def xpath(self, path, namespaces=None, extensions=None, smart_strings=True, **_variables):
+        """
+        Evaluate an xpath expression using the element as context node.
+        """
+        raise NotImplementedError()
 
 
 class _ContentOnlyElement(Element):
-    __slots__ = ("_parent","text","tail")
+    __slots__ = ()
 
     def __init__(self, text=None):
         self._parent = None
@@ -247,6 +374,8 @@ class _ContentOnlyElement(Element):
 
 
 class Comment(_ContentOnlyElement):
+    __slots__ = ()
+
     @property
     def tag(self):
         return Comment
@@ -256,6 +385,8 @@ class Comment(_ContentOnlyElement):
 
 
 class ProcessingInstruction(_ContentOnlyElement):
+    __slots__ = ()
+
     @property
     def tag(self):
         return ProcessingInstruction
@@ -285,4 +416,20 @@ class ProcessingInstruction(_ContentOnlyElement):
         It is not guaranteed to work for all possible text content.
         """
         return self.attrib.get(key, default)
+
+
+def SubElement(parent, tag, attrib=None, **extra):
+    """Subelement factory which creates an element instance, and appends it
+    to an existing parent.
+
+    The element tag, attribute names, and attribute values can be either
+    bytes or Unicode strings.
+
+    *parent* is the parent element, *tag* is the subelements name, *attrib* is
+    an optional directory containing element attributes, *extra* are
+    additional attributes given as keyword arguments.
+    """
+    e = parent.makeelement(tag, attrib, **extra)
+    parent.append(e)
+    return e
 

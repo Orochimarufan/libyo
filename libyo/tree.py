@@ -31,17 +31,17 @@ class Element(object):
     """
     A Tree Element
     """
-    
-    __slots__ = ("_parent", "_children")
-    
+
+    __slots__ = ("_parent", "_children", "__weakref__")
+
     def __init__(self):
         self._parent = None
         self._children = list()
-    
+
     @property
     def _index(self):
         return self._parent.index(self)
-    
+
     # sequence api
     def __contains__(self, elem):
         return elem in self._children
@@ -72,7 +72,7 @@ class Element(object):
         if self._parent is not None:
             self._parent.remove(self)
         self._parent = parent
-    
+
     # etree api
     def addnext(self, elem):
         """
@@ -103,13 +103,13 @@ class Element(object):
         """
         for elem in elements:
             self.append(elem)
-    
+
     def getnext(self):
         """
         Returns the following sibling of this element or None.
         """
         ix = self._index
-        if ix == len(self._parent):
+        if ix == len(self._parent) - 1:
             return None
         return self._parent[ix + 1]
 
@@ -127,7 +127,15 @@ class Element(object):
         if ix == 0:
             return None
         return self._parent[ix - 1]
-    
+
+    def getroot(self):
+        """
+        Returns the tree root Element
+        """
+        for ancestor in self.iterancestors():
+            pass
+        return ancestor
+
     def index(self, elem):
         """
         Find the position of the child within the parent.
@@ -140,7 +148,7 @@ class Element(object):
         """
         element._assign(self)
         self._children.insert(index, element)
-    
+
     def iter(self, *tags):
         """
         Iterate over all elements in the subtree in document order (depth first pre-order), starting with this element.
@@ -205,7 +213,7 @@ class Element(object):
                 node = stack.pop()
                 yield node
                 stack.extend(reversed(node))
-    
+
     def itersiblings(self, tag=None, preceding=False, *tags):
         """
         Iterate over the following or preceding siblings of this element.
@@ -223,7 +231,7 @@ class Element(object):
             return (sib for sib in x if sib.tag in tags)
         else:
             return x
-    
+
     def remove(self, elem):
         """
         Removes a matching subelement. Unlike the find methods, this method compares elements based on identity, not on tag value or contents.
@@ -236,5 +244,4 @@ class Element(object):
         """
         new_elem._assign(self)
         self._children[self._children.index(elem)] = new_elem
-
 
