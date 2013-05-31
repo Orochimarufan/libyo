@@ -39,8 +39,8 @@ ntup = namedtuple("version_info", "major,minor,micro,patch")
 
 # -------------------------------------------------
 # libyo version
-version_info = ntup(0, 10, 0, 0)
-version = "0.10"
+version_info = ntup(0, 11, 0, 0)
+version = "0.11"
 # -------------------------------------------------
 
 
@@ -67,7 +67,7 @@ LIBYO_VERSION_MINOR, \
 LIBYO_VERSION_PATCH = version_info[:3]
 
 # Echo Version
-import logging
+import logging  # @Reimport
 logging.getLogger("libyo").info("libyo version {0}".format(version))
 # -------------------------------------------------
 

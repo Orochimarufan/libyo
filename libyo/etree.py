@@ -1,27 +1,30 @@
+#----------------------------------------------------------------------
+#- libyo.etree
+#----------------------------------------------------------------------
+#- Copyright (C) 2011-2013 Orochimarufan
+#-                Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+#-
+#- This program is free software: you can redistribute it and/or modify
+#- it under the terms of the GNU General Public License as published by
+#- the Free Software Foundation, either version 3 of the License, or
+#- (at your option) any later version.
+#-
+#- This program is distributed in the hope that it will be useful,
+#- but WITHOUT ANY WARRANTY; without even the implied warranty of
+#- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#- GNU General Public License for more details.
+#-
+#- You should have received a copy of the GNU General Public License
+#- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+
 """
-----------------------------------------------------------------------
-- etree: Simple ElementTree Implementation
-----------------------------------------------------------------------
-- Copyright (C) 2011-2013  Orochimarufan
--                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
--
-- This program is free software: you can redistribute it and/or modify
-- it under the terms of the GNU General Public License as published by
-- the Free Software Foundation, either version 3 of the License, or
-- (at your option) any later version.
--
-- This program is distributed in the hope that it will be useful,
-- but WITHOUT ANY WARRANTY; without even the implied warranty of
-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- GNU General Public License for more details.
--
-- You should have received a copy of the GNU General Public License
-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-----------------------------------------------------------------------
+Simple ElementTree Implementation
 """
 
 from __future__ import absolute_import, unicode_literals
 
+# Imports
 import re
 
 from collections import deque
@@ -36,6 +39,12 @@ except ImportError:
 
 from . import tree
 
+# Exports
+__all__ = ["ElementTree", "Element", "Comment", "ProcessingInstruction",
+           "SubElement",
+           "TreeBuildError", "EmptyTree", "AmbiguousRoot", "TagMismatch",
+           "TreeBuilder"]
+
 
 class ElementTree(object):
     """
@@ -43,10 +52,11 @@ class ElementTree(object):
     """
     __slots__ = ("_root",)
 
-    # TODO:
-    # make methods on this respect the root
+    """TODO
+    make methods on this respect the root
+    """
 
-    def __init__(self, root):
+    def __init__(self, root=None):
         self._root = root
 
     def getroot(self):
@@ -57,24 +67,33 @@ class ElementTree(object):
         Relocate the ElementTree to a new root node.
         """
         self._root = root
+    
+    @staticmethod
+    def _absfindpath(path):
+        # work around ElementPath quirks
+        if path.startswith("//"):
+            return "." + path # // is descendant-*or-self*, so this is legal!
+        elif path.startswith("/"):
+            raise NotImplementedError("absolute paths are not implemented!")
+        return path
 
     def find(self, path, namespaces=None):
         """
         Finds the first toplevel element with given tag. Same as tree.getroot().find(path).
         """
-        return self._root.find(path, namespaces)
+        return self._root.find(self._absfindpath(path), namespaces)
 
     def findall(self, path, namespaces=None):
         """
         Finds all elements matching the ElementPath expression. Same as getroot().findall(path).
         """
-        return self._root.findall(path, namespaces)
+        return self._root.findall(self._absfindpath(path), namespaces)
 
     def findtext(self, path, default=None, namespaces=None):
         """
         Finds the text for the first element matching the ElementPath expression. Same as getroot().findtext(path)
         """
-        return self._root.findtext(path, default, namespaces)
+        return self._root.findtext(self._absfindpath(path), default, namespaces)
 
     def getpath(self, element):
         """
@@ -94,11 +113,29 @@ class ElementTree(object):
         """
         return self._root.iterfind(path, namespaces)
 
-    def parse(self):
+    def parse(self, source, parser):
         """
         Updates self with the content of source and returns its root
         """
-        raise NotImplementedError()
+        close_src = False
+        if not hasattr(source, "read"):
+            close_src = True
+            from .urllib import request
+            if isinstance(source, request.Request) or re.match(r'\w+://', source):
+                source = request.urlopen(source)
+            else:
+                source = open(source, "rb")
+        try:
+            while 1:
+                data = source.read(65536)
+                if not data:
+                    break
+                parser.feed(data)
+            self._root = parser.close()
+            return self._root
+        finally:
+            if close_src:
+                source.close()
 
     def relaxng(self, relaxng):
         """
@@ -267,7 +304,9 @@ class Element(tree.Element):
     else:
         def iterfind(self, path, namespaces=None):
             raise ImportError("*find* functionality relies on xml.etree.ElementPath!")
+        
         find = findall = iterfind
+        
         def findtext(self, path, default=None, namespaces=None):
             raise ImportError("*find* functionality relies on xml.etree.ElementPath!")
 
@@ -322,6 +361,10 @@ class Element(tree.Element):
         raise NotImplementedError()
 
 
+def _raiseImmutable(self):
+    raise TypeError("this element does not have children or attributes")
+
+
 class _ContentOnlyElement(Element):
     __slots__ = ()
 
@@ -329,9 +372,6 @@ class _ContentOnlyElement(Element):
         self._parent = None
         self.tail = None
         self.text = text
-
-    def _raiseImmutable(self):
-        raise TypeError("this element does not have children or attributes")
 
     def set(self, key, default=None):
         _raiseImmutable()
@@ -386,6 +426,11 @@ class Comment(_ContentOnlyElement):
 
 class ProcessingInstruction(_ContentOnlyElement):
     __slots__ = ()
+    
+    def __init__(self, target, text=None):
+        super(ProcessingInstruction, self).__init__(target)
+        if text is not None:
+            self.text += " " + text
 
     @property
     def tag(self):
@@ -401,8 +446,8 @@ class ProcessingInstruction(_ContentOnlyElement):
         Note that modifying the dict currently has no effect on the
         XML node, although this is not guaranteed to stay this way.
         """
-        return { attr : (value1 or value2)
-               for attr, value1, value2 in self._FIND_PI_ATTRIBUTES(' ' + self.text) }
+        return {attr: (value1 or value2)
+               for attr, value1, value2 in self._FIND_PI_ATTRIBUTES(' ' + self.text)}
 
     def get(self, key, default=None):
         """
@@ -433,3 +478,101 @@ def SubElement(parent, tag, attrib=None, **extra):
     parent.append(e)
     return e
 
+
+class TreeBuildError(ValueError):
+    pass
+
+
+class EmptyTree(TreeBuildError):
+    pass
+
+
+class AmbiguousRoot(TreeBuildError):
+    pass
+
+
+class TagMismatch(TreeBuildError):
+    pass
+
+
+class TreeBuilder(deque):
+    __slots__ = ("root", "buffer", "factory")
+    
+    # Element Factories
+    default_factory = Element
+    comment_factory = Comment
+    pi_factory = ProcessingInstruction
+    
+    def __init__(self, element_factory=None):
+        super(TreeBuilder, self).__init__()
+        if element_factory is None:
+            element_factory = self.default_factory
+        self.factory = element_factory
+        self.buffer = list()
+        self.root = None
+    
+    def start(self, tag, attrs):
+        """ Start a Tag """
+        self.flushBuffer()
+        if len(self) == 0:
+            if self.root is not None:
+                raise AmbiguousRoot("There can only be one root tag.")
+            else:
+                self.root = self.factory(tag, attrs)
+                self.append(self.root)
+        else:
+            this = self.factory(tag, attrs)
+            self[-1].append(this)
+            self.append(this)
+    
+    def end(self, tag):
+        """ Close a Tag """
+        self.flushBuffer()
+        if self[-1].tag != tag:
+            raise TagMismatch("End tag mismatch: expected %s, got %s" % (self[-1].tag, tag))
+        return self.pop()
+    
+    def data(self, data):
+        """ Handle string data """
+        self.buffer.append(data)
+    
+    def flushBuffer(self):
+        """ finish data processing """
+        if self.buffer:
+            data = "".join(self.buffer)
+            if len(self) == 0:
+                if not data.strip():
+                    return
+                raise AmbiguousRoot("Encountered text outside root element: '%s'" % data)
+            e = self[-1]
+            if len(e) != 0:
+                e[-1].tail = data
+            else:
+                e.text = data
+            self.buffer = list()
+    
+    def close(self):
+        """ wrap up the parsing """
+        self.flushBuffer()
+        if len(self) != 0:
+            raise TagMismatch("%i Missing end tags: %s" % (len(self), list(reversed(self._debugtags()))))
+        if self.root is None:
+            raise EmptyTree("Missing root element: tree empty")
+        return self.root
+    
+    def comment(self, data):
+        """ XML Comment """
+        self.flushBuffer()
+        if len(self) == 0:
+            raise AmbiguousRoot("Encountered Comment outside root")
+        self[-1].append(self.comment_factory(data))
+
+    def pi(self, target, data):
+        """ XML Processing Instruction """
+        self.flushBuffer()
+        if len(self) == 0:
+            raise AmbiguousRoot("Encountered Processing Instruction outside root")
+        self[-1].append(self.pi_factory(target, data))
+    
+    def _debugtags(self):
+        return [e.tag for e in self]

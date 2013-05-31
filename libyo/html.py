@@ -1,29 +1,32 @@
+#----------------------------------------------------------------------
+#- libyo.html
+#----------------------------------------------------------------------
+#- Copyright (C) 2011-2013 Orochimarufan
+#-                Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+#-
+#- This program is free software: you can redistribute it and/or modify
+#- it under the terms of the GNU General Public License as published by
+#- the Free Software Foundation, either version 3 of the License, or
+#- (at your option) any later version.
+#-
+#- This program is distributed in the hope that it will be useful,
+#- but WITHOUT ANY WARRANTY; without even the implied warranty of
+#- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#- GNU General Public License for more details.
+#-
+#- You should have received a copy of the GNU General Public License
+#- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+
 """
-----------------------------------------------------------------------
-- htmlparser: Simple HTML Parser Implementation
-----------------------------------------------------------------------
-- Copyright (C) 2011-2013  Orochimarufan
--                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
--
-- This program is free software: you can redistribute it and/or modify
-- it under the terms of the GNU General Public License as published by
-- the Free Software Foundation, either version 3 of the License, or
-- (at your option) any later version.
--
-- This program is distributed in the hope that it will be useful,
-- but WITHOUT ANY WARRANTY; without even the implied warranty of
-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- GNU General Public License for more details.
--
-- You should have received a copy of the GNU General Public License
-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-----------------------------------------------------------------------
+HTML Parser on top of etree
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, division
 
+# Imports
 import logging
-import re
+logger = logging.getLogger(__name__)
 
 from collections import deque
 
@@ -31,28 +34,39 @@ from .compat.uni import unichr
 from .compat.html import entities, parser
 from .compat import PY3
 
-from .urllib.request import urlopen
+from .etree import *  # @UnusedWildImport
 
-from . import etree
+# Exports
+__all__ = ["ElementTree", "Element", "Comment", "ProcessingInstruction",
+           "SubElement", "Document",
+           "TreeBuildError", "EmptyTree", "AmbiguousRoot", "TagMismatch",
+           "TreeBuilder", "HTMLParser", "parse", "fragment_fromstring"]
 
-logger = logging.getLogger(__name__)
 
-
-class Document(etree.ElementTree):
+class Document(ElementTree):
     """
     A DOM Document
     """
     __slots__ = ()
 
-    def get_element_by_id(self, id, default=None):
-        return self._root.get_element_by_id(id)
+    def get_element_by_id(self, id_, default=None):
+        return self._root.get_element_by_id(id_)
 
     def find_class(self, name):
         return self._root.find_class(name)
+    
+    def parse(self, source, parser=None):
+        if parser is None:
+            parser = HTMLParser(TreeBuilder())
+        return super(Document, self).parse(source, parser)
+
+
+ElementTree = Document
 
 
 class Mixin(object):
     __slots__ = ()
+    
     # lxml.html api
     def drop_tree(self):
         """
@@ -103,17 +117,18 @@ class Mixin(object):
         """
         return [elem for elem in self.iter() if name in elem.get("class", "").split(" ")]
 
-    # TODO
-    # def find_rel_links(self, rel):
+    """TODO
+    def find_rel_links(self, rel):
+    """
 
-    def get_element_by_id(self, id, default=None):
+    def get_element_by_id(self, id_, default=None):
         """
-        Return the element with the given id, or the default if none is found.
-        If there are multiple elements with the same id (which there shouldn't be, but there often is),
+        Return the element with the given id_, or the default if none is found.
+        If there are multiple elements with the same id_ (which there shouldn't be, but there often is),
         this returns only the first.
         """
         for elem in self.iter():
-            if elem.get("id", None) == id:
+            if elem.get("id", None) == id_:
                 return elem
 
     def _iter_text_content(self):
@@ -153,9 +168,9 @@ class Mixin(object):
         return Document(self.getroot())
 
 
-class Element(etree.Element, Mixin):
+class Element(Element, Mixin):
     __slots__ = ()
-    # String representations
+    
     def __repr__(self):
         """
         A readable representation
@@ -167,125 +182,94 @@ class Element(etree.Element, Mixin):
             " at 0x%x>" % id(self)))
 
 
-class Comment(etree.Comment, Mixin):
+class Comment(Comment, Mixin):
     __slots__ = ()
-    pass
 
 
-class ProcessingInstruction(etree.ProcessingInstruction, Mixin):
+class ProcessingInstruction(ProcessingInstruction, Mixin):
     __slots__ = ()
-    pass
 
 
-class Parser(deque):
+class TreeBuilder(TreeBuilder):
     """
-    The Parser itself.
+    The Tree Builder, HTML edition
+    this does much magic to clean up (invalid) HTML trees
     """
-    __slots__ = ("root",)
-
-    def __init__(self):
-        super(Parser, self).__init__()
-        self.root = None
-
-    def open(self, name, attrs):
-        """ Open a new Tag """
-        if not len(self):
-            if self.root is not None:
-                raise ValueError("There can only be one root tag.")
-            else:
-                self.root = Element(name, attrs)
-                self.append(self.root)
-        else:
-            this = Element(name, attrs)
-            self[-1].append(this)
-            self.append(this)
-
-    def text(self, text):
-        """ put Text data """
-        if len(self) == 0:
-            if not text.strip():
-                return
-            raise ValueError("Encountered text outside top-level element.")
-        e = self[-1]
-        if len(e):
-            e = e[-1]
-            if e.tail is not None:
-                e.tail += text
-            else:
-                e.tail = text
-        elif e.text is not None:
-            e.text += text
-        else:
-            e.text = text
-
-    def close(self, name):
+    __slots__ = ()
+    self_closing = ("area", "base", "br", "col", "command", "embed", "hr",
+                    "img", "input", "keygen", "link", "meta", "param",
+                    "source", "track", "wbr")
+    
+    def end(self, tag):
         """
         Close a tag.
         and try to clean up messy html.
         """
-        # try to get <p><img src='devil'></p> right
+        self.flushBuffer()
+        # Handle self-closing (void-) tags
         # TODO: improve self-closing handling
-        while len(self) > 2 and self[-1].tag != name and \
-                self[-1].tag in ("input", "meta", "link", "br", "hr", "img", "button"):
+        while self[-1].tag != tag and len(self) > 2 and self[-1].tag in self.self_closing:
             # move all children to the upper element
             self[-2].extend(self[-1])
             self.pop()
 
-        # still no match?
-        if self[-1].tag != name:
+        # try to fix broken html trees
+        if self[-1].tag != tag:
             # maybe the last tag was closed twice?
             for elem in self:
-                if elem.tag == name:
+                if elem.tag == tag:
                     # we found a matching open tag, so we'll assume that it was not
                     break
             else:
                 # there are no matching open tags, so we'll assume it was
-                logger.warn("Malformed HTML: %s closed twice (near: %s)" % (name, repr(self[-1])))
+                logger.warn("Malformed HTML: %s closed twice (near: %s, stack: %s)" % (tag, repr(self[-1]), self._debugtags()))
                 return
 
-            # pretend others were self-closing
-            # XXX: just pop everything on malformed HTML?
-            logger.warn("Malformed HTML: '%s' closed but last element on stack is %s" % (name, repr(self[-1])))
-            while len(self) > 1 and self[-1].tag != name:
+            # FIXME: close all inner tags?
+            logger.warn("Malformed HTML: %s closed but last element on stack is %s (stack: %s)" % (tag, repr(self[-1]), self._debugtags()))
+            while len(self) > 1 and self[-1].tag != tag:
                 self.pop()
 
         # pop the tag
         return self.pop()
+    
+    #def close(self):
+    #    if self.root is None:
+    #        raise EmptyTree("Missing root element: tree empty")
+    #    # make missing end tags non-critical
+    #    if len(self):
+    #        logger.warn("Malformed HTML: Missing %i end tags: %s, buffer: %s" % (len(self), list(reversed(self._debugtags())), self.buffer))
+    #    return self.root
 
-    def comment(self, data):
-        """ XML Comment """
-        if len(self) == 0:
-            raise ValueError("Encountered Comment outside root")
-        self[-1].append(Comment(data))
-
-    def pi(self, data):
-        """ XML Processing Instruction """
-        if len(self) == 0:
-            raise ValueError("Encountered Processing Instruction outside root")
-        self[-1].append(ProcessingInstruction(data))
+    # We have our own Factories
+    default_factory = Element
+    comment_factory = Comment
+    pi_factory = ProcessingInstruction
 
 
 class HTMLParser(parser.HTMLParser):
     """
     The stdlib-HTMLParser interface
     """
-    def __init__(self, strict=False):
-        self.parser = Parser()
-        self.rawddata = ""
+    def __init__(self, target=None, strict=False):
+        # in python 2.x, HTMLParser is a old-style class and doesn't support strict
         if PY3:
             super(HTMLParser, self).__init__(strict)
         else:
-            # in python 2.x, HTMLParser is a old-style class and doesn't support strict
             parser.HTMLParser.__init__(self)
+        
+        if target is None:
+            target = TreeBuilder()
+        self.target = target
 
     def handle_starttag(self, name, attrs):
-        self.parser.open(name, attrs)
+        self.target.start(name, attrs)
 
     def handle_endtag(self, name):
-        self.parser.close(name)
+        self.target.end(name)
 
     def handle_data(self, data):
-        self.parser.text(data)
+        self.target.data(data)
 
     def handle_charref(self, name):
         if name.startswith("x"):
@@ -307,7 +291,7 @@ class HTMLParser(parser.HTMLParser):
         self.handle_data(c)
 
     def handle_comment(self, data):
-        self.parser.comment(data)
+        self.target.comment(data)
 
     def handle_pi(self, data):
         if data.endswith("?") and data.lower().startswith("xml"):
@@ -318,52 +302,44 @@ class HTMLParser(parser.HTMLParser):
             # Strip the question mark so we don't end up with two
             # question marks.
             data = data[:-1]
-        self.parser.pi(data)
+        self.target.pi(data)
+    
+    def close(self):
+        if PY3:
+            super(HTMLParser, self).close()
+        else:
+            parser.HTMLParser.close(self)
+        if hasattr(self.target, "close"):
+            return self.target.close()
+    
+    def feed(self, data):
+        # convert to str
+        if isinstance(data, bytes):
+            try:
+                data = data.decode("UTF-8")
+            except UnicodeDecodeError:
+                data = data.decode("Latin-1")
+        return super(HTMLParser, self).feed(data)
 
-    def get_document(self):
-        return Document(self.parser.root)
 
-    def get_root(self):
-        return self.parser.root
-
-
-#simple url regex
-_url_reg = re.compile(r'\w+://')
-
-def parse(file_or_url):
+def parse(source, parser=None):
     """
     Parses the named file or url, or if the object has a .read() method, parses from that.
     """
-    p = HTMLParser()
-    if hasattr(file_or_url, "read"):
-        s = file_or_url.read()
-        if isinstance(s, bytes):
-            try:
-                p.feed(s.decode("UTF-8"))
-            except UnicodeDecodeError:
-                p.feed(s.decode("Latin-1"))
-        else:
-            p.feed(s)
-    elif _url_reg.match(file_or_url):
-        with urlopen(file_or_url) as fp:
-            try:
-                p.feed(fp.read().decode("UTF-8"))
-            except UnicodeDecodeError:
-                p.feed(fp.read().decode("Latin-1"))
-    else:
-        with open(file_or_url, "r") as fp:
-            p.feed(fp.read())
-    return p.get_document()
+    document = Document()
+    document.parse(source, parser)
+    return document
 
 
-def fragment_fromstring(markup, create_parent=None):
+def fragment_fromstring(text, parser=None, create_parent=None):
     """
     Returns an HTML fragment from a string. The fragment must contain just a single element, unless create_parent is given; e.g,. fragment_fromstring(string, create_parent='div') will wrap the element in a <div>.
     """
-    p = HTMLParser()
-    if create_parent is not None:
-        p.parser.root = Element(create_parent, {})
-        p.parser.append(p.parser.root)
-    p.feed(markup)
-    return p.get_root()
-
+    if parser is None:
+        parser = HTMLParser(TreeBuilder())
+    if create_parent:
+        parser.feed("<%s>" % create_parent)
+    parser.feed(text)
+    if create_parent:
+        parser.feed("</%s>" % create_parent)
+    return parser.close()

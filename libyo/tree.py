@@ -1,30 +1,36 @@
+#----------------------------------------------------------------------
+#- libyo.tree
+#----------------------------------------------------------------------
+#- Copyright (C) 2011-2013 Orochimarufan
+#-                Authors: Orochimarufan <orochimarufan.x3@gmail.com>
+#-
+#- This program is free software: you can redistribute it and/or modify
+#- it under the terms of the GNU General Public License as published by
+#- the Free Software Foundation, either version 3 of the License, or
+#- (at your option) any later version.
+#-
+#- This program is distributed in the hope that it will be useful,
+#- but WITHOUT ANY WARRANTY; without even the implied warranty of
+#- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#- GNU General Public License for more details.
+#-
+#- You should have received a copy of the GNU General Public License
+#- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+
 """
-----------------------------------------------------------------------
-- tree: Simple Tree Implementation
-----------------------------------------------------------------------
-- Copyright (C) 2011-2013  Orochimarufan
--                 Authors: Orochimarufan <orochimarufan.x3@gmail.com>
--
-- This program is free software: you can redistribute it and/or modify
-- it under the terms of the GNU General Public License as published by
-- the Free Software Foundation, either version 3 of the License, or
-- (at your option) any later version.
--
-- This program is distributed in the hope that it will be useful,
-- but WITHOUT ANY WARRANTY; without even the implied warranty of
-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- GNU General Public License for more details.
--
-- You should have received a copy of the GNU General Public License
-- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-----------------------------------------------------------------------
+Simple Tree Implementation
 """
 
 from __future__ import absolute_import, unicode_literals
 
+# Imports
 from collections import deque
 
 _reversed = reversed
+
+# Exports
+__all__ = ["Element"]
 
 
 class Element(object):
@@ -136,11 +142,24 @@ class Element(object):
             pass
         return ancestor
 
-    def index(self, elem):
+    def index(self, elem, start=None, stop=None):
         """
         Find the position of the child within the parent.
         """
-        return self._children.index(elem)
+        if stop == None and start in (None, 0):
+            return self._children.index(elem)
+
+        if start == None:
+            start = 0
+        if stop == None:
+            stop = len(self._children) - 1
+
+        if elem not in self._children:
+            raise ValueError("list.index(x): x not in list")
+        elif elem not in self._children[start:stop]:
+            raise ValueError("list.index(x): x not in slice")
+        else:
+            return self._children.index(elem)
 
     def insert(self, index, element):
         """
@@ -179,7 +198,7 @@ class Element(object):
             yield x
             x = x.getparent()
 
-    def iterchildren(self, tag=None, reversed=False, *tags):
+    def iterchildren(self, tag=None, reversed=False, *tags):  # @ReservedAssignment
         """
         Iterate over the children of this element.
 
@@ -226,7 +245,7 @@ class Element(object):
             tags = list()
         if tag is not None:
             tags.insert(0, tag)
-        x = reversed(self._parent[:self._index]) if preceding else iter(self._parent[self._index+1:])
+        x = reversed(self._parent[:self._index]) if preceding else iter(self._parent[self._index + 1:])
         if tags:
             return (sib for sib in x if sib.tag in tags)
         else:
@@ -244,4 +263,3 @@ class Element(object):
         """
         new_elem._assign(self)
         self._children[self._children.index(elem)] = new_elem
-
