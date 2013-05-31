@@ -43,14 +43,13 @@ from . import tree
 __all__ = ["ElementTree", "Element", "Comment", "ProcessingInstruction",
            "SubElement",
            "TreeBuildError", "EmptyTree", "AmbiguousRoot", "TagMismatch",
-           "TreeBuilder"]
+           "TreeBuilder", "TreeSerializer"]
 
 
 class ElementTree(object):
     """
     A DOM Tree
     """
-    __slots__ = ("_root",)
 
     """TODO
     make methods on this respect the root
@@ -67,7 +66,7 @@ class ElementTree(object):
         Relocate the ElementTree to a new root node.
         """
         self._root = root
-    
+
     @staticmethod
     def _absfindpath(path):
         # work around ElementPath quirks
@@ -304,9 +303,9 @@ class Element(tree.Element):
     else:
         def iterfind(self, path, namespaces=None):
             raise ImportError("*find* functionality relies on xml.etree.ElementPath!")
-        
+
         find = findall = iterfind
-        
+
         def findtext(self, path, default=None, namespaces=None):
             raise ImportError("*find* functionality relies on xml.etree.ElementPath!")
 
@@ -426,7 +425,7 @@ class Comment(_ContentOnlyElement):
 
 class ProcessingInstruction(_ContentOnlyElement):
     __slots__ = ()
-    
+
     def __init__(self, target, text=None):
         super(ProcessingInstruction, self).__init__(target)
         if text is not None:
@@ -496,13 +495,11 @@ class TagMismatch(TreeBuildError):
 
 
 class TreeBuilder(deque):
-    __slots__ = ("root", "buffer", "factory")
-    
     # Element Factories
     default_factory = Element
     comment_factory = Comment
     pi_factory = ProcessingInstruction
-    
+
     def __init__(self, element_factory=None):
         super(TreeBuilder, self).__init__()
         if element_factory is None:
@@ -510,7 +507,7 @@ class TreeBuilder(deque):
         self.factory = element_factory
         self.buffer = list()
         self.root = None
-    
+
     def start(self, tag, attrs):
         """ Start a Tag """
         self.flushBuffer()
@@ -524,18 +521,18 @@ class TreeBuilder(deque):
             this = self.factory(tag, attrs)
             self[-1].append(this)
             self.append(this)
-    
+
     def end(self, tag):
         """ Close a Tag """
         self.flushBuffer()
         if self[-1].tag != tag:
             raise TagMismatch("End tag mismatch: expected %s, got %s" % (self[-1].tag, tag))
         return self.pop()
-    
+
     def data(self, data):
         """ Handle string data """
         self.buffer.append(data)
-    
+
     def flushBuffer(self):
         """ finish data processing """
         if self.buffer:
@@ -550,16 +547,16 @@ class TreeBuilder(deque):
             else:
                 e.text = data
             self.buffer = list()
-    
+
     def close(self):
         """ wrap up the parsing """
         self.flushBuffer()
         if len(self) != 0:
-            raise TagMismatch("%i Missing end tags: %s" % (len(self), list(reversed(self._debugtags()))))
+            raise TagMismatch("Missing %i end tags: %s" % (len(self), list(reversed(self._debugtags()))))
         if self.root is None:
             raise EmptyTree("Missing root element: tree empty")
         return self.root
-    
+
     def comment(self, data):
         """ XML Comment """
         self.flushBuffer()
@@ -573,6 +570,69 @@ class TreeBuilder(deque):
         if len(self) == 0:
             raise AmbiguousRoot("Encountered Processing Instruction outside root")
         self[-1].append(self.pi_factory(target, data))
-    
+
     def _debugtags(self):
         return [e.tag for e in self]
+
+
+class TreeSerializer(deque):
+    # API
+    def walk_starttag(self, tag, attribs):
+        pass
+
+    def walk_endtag(self, tag):
+        pass
+
+    def walk_data(self, data):
+        pass
+
+    def walk_emptytag(self, tag, attribs):
+        self.walk_starttag(tag, attribs)
+        self.walk_endtag(tag)
+
+    def walk_comment(self, text):
+        pass
+
+    def walk_pi(self, target, text):
+        pass
+
+    def serialize(self, root):
+        """ walk the tree """
+        self.clear()
+        if len(root) or root.text:
+            self.walk_starttag(root.tag, root._attrib)
+            if root.text:
+                self.walk_data(root.text)
+            if len(root):
+                self.append((root, -1))
+                while self:
+                    # parent, child_index
+                    this, i = self.pop()
+                    i += 1
+                    if i >= len(this):
+                        # we're done
+                        self.walk_endtag(this.tag)
+                        if this.tail:
+                            self.walk_data(this.tail)
+                    else:
+                        # go deeper
+                        self.append((this, i))
+                        e = this[i]
+                        if len(e) or e.text:
+                            self.walk_starttag(e.tag, e._attrib)
+                            if e.text:
+                                self.walk_data(e.text)
+                            if len(e):
+                                self.append((e, -1))
+                            else:
+                                self.walk_endtag(e.tag)
+                                if e.tail:
+                                    self.walk_data(e.tail)
+                        else:
+                            self.walk_emptytag(e.tag, e._attrib)
+                            if e.tail:
+                                self.walk_data(e.tail)
+            else:
+                self.walk_endtag(root.tag)
+        else:
+            self.walk_emptytag(root.tag, root._attrib)

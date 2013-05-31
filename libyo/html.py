@@ -47,14 +47,12 @@ class Document(ElementTree):
     """
     A DOM Document
     """
-    __slots__ = ()
-
     def get_element_by_id(self, id_, default=None):
         return self._root.get_element_by_id(id_)
 
     def find_class(self, name):
         return self._root.find_class(name)
-    
+
     def parse(self, source, parser=None):
         if parser is None:
             parser = HTMLParser(TreeBuilder())
@@ -66,7 +64,7 @@ ElementTree = Document
 
 class Mixin(object):
     __slots__ = ()
-    
+
     # lxml.html api
     def drop_tree(self):
         """
@@ -170,7 +168,7 @@ class Mixin(object):
 
 class Element(Element, Mixin):
     __slots__ = ()
-    
+
     def __repr__(self):
         """
         A readable representation
@@ -195,11 +193,10 @@ class TreeBuilder(TreeBuilder):
     The Tree Builder, HTML edition
     this does much magic to clean up (invalid) HTML trees
     """
-    __slots__ = ()
     self_closing = ("area", "base", "br", "col", "command", "embed", "hr",
                     "img", "input", "keygen", "link", "meta", "param",
                     "source", "track", "wbr")
-    
+
     def end(self, tag):
         """
         Close a tag.
@@ -232,7 +229,7 @@ class TreeBuilder(TreeBuilder):
 
         # pop the tag
         return self.pop()
-    
+
     #def close(self):
     #    if self.root is None:
     #        raise EmptyTree("Missing root element: tree empty")
@@ -257,7 +254,7 @@ class HTMLParser(parser.HTMLParser):
             super(HTMLParser, self).__init__(strict)
         else:
             parser.HTMLParser.__init__(self)
-        
+
         if target is None:
             target = TreeBuilder()
         self.target = target
@@ -303,7 +300,7 @@ class HTMLParser(parser.HTMLParser):
             # question marks.
             data = data[:-1]
         self.target.pi(data)
-    
+
     def close(self):
         if PY3:
             super(HTMLParser, self).close()
@@ -311,7 +308,7 @@ class HTMLParser(parser.HTMLParser):
             parser.HTMLParser.close(self)
         if hasattr(self.target, "close"):
             return self.target.close()
-    
+
     def feed(self, data):
         # convert to str
         if isinstance(data, bytes):

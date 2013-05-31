@@ -28,6 +28,8 @@ from __future__ import absolute_import, unicode_literals, division
 import logging
 logger = logging.getLogger(__name__)
 
+import io
+
 HAVE_EXPAT = True
 try:
     import xml.parsers.expat as expat
@@ -43,7 +45,7 @@ from .etree import *  # @UnusedWildImport
 __all__ = ["ElementTree", "Element", "Comment", "ProcessingInstruction",
            "SubElement",
            "TreeBuildError", "EmptyTree", "AmbiguousRoot", "TagMismatch",
-           "TreeBuilder",
+           "TreeBuilder", "XMLSerializer",
            "ParseError", "XMLParser", "parse", "fragment_fromstring"]
 
 
@@ -60,15 +62,14 @@ class ParseError(SyntaxError):
 
 class XMLParser(object):
     """ The XML Parser (uses expat) """
-    __slots__ = ("parser", "target", "_doctype")
-    
+
     if HAVE_EXPAT:
         def __init__(self, target=None, encoding=None):
             self.parser = expat.ParserCreate(encoding, "}")
             if target is None:
                 target = TreeBuilder()
             self.target = target
-            
+
             # Create Parser
             self.parser.DefaultHandlerExpand = self._default
             if hasattr(self.target, "start"):
@@ -81,12 +82,12 @@ class XMLParser(object):
                 self.parser.CommentHandler = self.target.comment
             if hasattr(self.target, "pi"):
                 self.parser.ProcessingInstructionHandler = self.target.pi
-            
+
             try:
                 self.parser.buffer_text = 1
             except AttributeError:
                 pass
-            
+
             try:
                 self.parser.ordered_attributes = 1
                 self.parser.specified_attributes = 1
@@ -94,32 +95,33 @@ class XMLParser(object):
                     self.parser.StartElementHandler = self._start2
             except AttributeError:
                 pass
-            
+
             self._doctype = None
     else:
         def __init__(self, target=None, encoding=None):
             raise ImportError("no module named xml.parsers.expat")
-    
-    def _error(self, value):
-        err = ParseError(value)
+
+    def _error(self, value, string=None):
+        line = string.split("\n")[value.lineno - 1]
+        err = ParseError(value, ("XML", value.lineno, value.offset, line))
         err.code = value.code
         err.position = value.lineno, value.offset
         return err
-    
+
     def _fixname(self, name):
         if "}" in name:
             return "".join("{", name)
         return name
-    
+
     def _start(self, tag, attrib_in):
         return self.target.start(self._fixname(tag), {self._fixname(name): value for name, value in attrib_in.items()})
-    
+
     def _start2(self, tag, attrib_in):
         return self.target.start(self._fixname(tag), {self._fixname(attrib_in[i]): attrib_in[i + 1] for i in range(0, len(attrib_in), 2)})
-    
+
     def _end(self, tag):
         return self.target.end(self._fixname(tag))
-    
+
     def _default(self, text):
         """ Default handler (same as the ElementTree version)"""
         prefix = text[:1]
@@ -159,13 +161,13 @@ class XMLParser(object):
                 if hasattr(self.target, "doctype"):
                     self.target.doctype(name, pubid, system[1:-1])
                 self._doctype = None
-    
+
     def feed(self, data):
         try:
             self.parser.Parse(data, 0)
         except expat.error as e:
-            raise self._error(e)
-    
+            raise self._error(e, data)
+
     def close(self):
         try:
             self.parser.Parse("", 1)
@@ -202,5 +204,66 @@ def fragment_fromstring(text, parser=None, create_parent=None):
         parser.feed("</%s>" % create_parent)
     return parser.close()
 
-
 XML = fragment_fromstring
+
+
+# Serialization
+class XMLSerializer(TreeSerializer):
+    @staticmethod
+    def _escape_data(text):
+        try:
+            if "&" in text:
+                text = text.replace("&", "&amp;")
+            if "<" in text:
+                text = text.replace("<", "&lt;")
+            if ">" in text:
+                text = text.replace(">", "&gt;")
+            return text
+        except (AttributeError, TypeError):
+            raise TypeError("Data is not str: %s" % text)
+
+    @staticmethod
+    def _escape_attrib(text):
+        try:
+            if "&" in text:
+                text = text.replace("&", "&amp;")
+            if "<" in text:
+                text = text.replace("<", "&lt;")
+            if ">" in text:
+                text = text.replace(">", "&gt;")
+            if "\"" in text:
+                text = text.replace("\"", "&quot;")
+            if "\n" in text:
+                text = text.replace("\n", "&#10;")
+            return text
+        except (AttributeError, TypeError):
+            raise TypeError("Attribute value is not str: %s" % text)
+
+    def __init__(self, file):
+        super(XMLSerializer, self).__init__()
+        self.file = file
+
+    def walk_starttag(self, tag, attrib):
+        if attrib:
+            self.file.write("<%s %s>" % (tag, " ".join(("%s=\"%s\"" % i for i in sorted(attrib.items())))))
+        else:
+            self.file.write("<%s>" % tag)
+
+    def walk_endtag(self, tag):
+        self.file.write("</%s>" % tag)
+
+    def walk_emptytag(self, tag, attrib):
+        if attrib:
+            self.file.write("<%s %s />" % (tag, " ".join(("%s=\"%s\"" % (k, self._escape_attrib(v)) for k, v in sorted(attrib.items())))))
+        else:
+            self.file.write("<%s/>" % tag)
+
+    def walk_data(self, data):
+        self.file.write(self._escape_data(data))
+
+
+def tostring(root):
+    fp = io.StringIO()
+    s = XMLSerializer(fp)
+    s.serialize(root)
+    return fp.getvalue()

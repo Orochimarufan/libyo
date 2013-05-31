@@ -37,7 +37,6 @@ class Element(object):
     """
     A Tree Element
     """
-
     __slots__ = ("_parent", "_children", "__weakref__")
 
     def __init__(self):
