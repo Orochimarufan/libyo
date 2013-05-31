@@ -25,5 +25,5 @@ from .feature import feature
 
 feature("htmlparser", [
                       ("lxml", "lxml.html"),
-                      ("libyo", ".htmlparser")
+                      ("libyo", ".html")
                      ])
