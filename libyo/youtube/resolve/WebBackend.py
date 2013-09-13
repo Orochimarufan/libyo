@@ -57,7 +57,13 @@ class WebBackend(AbstractBackend):
         if una is not None:
             t = una.text.strip('"').strip()
             raise BackendFailedException("Youtube said: %s" % t)
-        src = div[3].text
+        #src = div[3].text
+        for i in div.iterfind(".//script"):
+            if i.text and "ytplayer.config" in i.text:
+                src = i.text
+                break
+        else:
+            raise BackendFailedException("Could not find ytplayer.config")
         ibgn = src.index("ytplayer.config = {") + 18
         iend = src.rindex("}") + 1
         script = src[ibgn:iend]
